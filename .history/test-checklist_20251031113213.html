@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScriptStudio 테스트 체크리스트</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: white;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .test-item {
+            background: #f8f9fa;
+            border-left: 4px solid #dee2e6;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .test-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-item.checked {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        
+        .test-item.checked .checkbox {
+            background: #28a745;
+            border-color: #28a745;
+        }
+        
+        .test-item.checked .checkbox::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+        }
+        
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .test-label {
+            flex: 1;
+            font-size: 1.05em;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .reset-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+            transition: background 0.3s ease;
+        }
+        
+        .reset-btn:hover {
+            background: #c82333;
+        }
+        
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .note strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 ScriptStudio 테스트</h1>
+            <p>통합 테스트 체크리스트</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">전체</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="checkedCount">0</div>
+                    <div class="stat-label">완료</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="percentCount">0%</div>
+                    <div class="stat-label">진행률</div>
+                </div>
+            </div>
+
+            <div class="note">
+                <strong>💡 사용 방법:</strong> 각 항목을 클릭하여 체크하세요. 진행 상황은 자동으로 저장됩니다.
+            </div>
+
+            <div class="section">
+                <h2>1️⃣ 기본 CRUD</h2>
+                <div class="test-item" data-test="create-project">
+                    <div class="checkbox"></div>
+                    <div class="test-label">프로젝트 생성 및 확인</div>
+                </div>
+                <div class="test-item" data-test="create-note">
+                    <div class="checkbox"></div>
+                    <div class="test-label">노트 생성 및 제목 입력</div>
+                </div>
+                <div class="test-item" data-test="read-note">
+                    <div class="checkbox"></div>
+                    <div class="test-label">노트 목록 확인 및 선택</div>
+                </div>
+                <div class="test-item" data-test="update-note">
+                    <div class="checkbox"></div>
+                    <div class="test-label">노트 수정 및 자동 저장 (5초 대기)</div>
+                </div>
+                <div class="test-item" data-test="delete-note">
+                    <div class="checkbox"></div>
+                    <div class="test-label">노트 삭제 확인</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>2️⃣ 에디터 기능</h2>
+                <div class="test-item" data-test="editor-bold">
+                    <div class="checkbox"></div>
+                    <div class="test-label">굵게 서식 (Ctrl/Cmd + B)</div>
+                </div>
+                <div class="test-item" data-test="editor-italic">
+                    <div class="checkbox"></div>
+                    <div class="test-label">기울임 서식 (Ctrl/Cmd + I)</div>
+                </div>
+                <div class="test-item" data-test="editor-list">
+                    <div class="checkbox"></div>
+                    <div class="test-label">리스트 (순서/비순서)</div>
+                </div>
+                <div class="test-item" data-test="editor-link">
+                    <div class="checkbox"></div>
+                    <div class="test-label">링크 삽입</div>
+                </div>
+                <div class="test-item" data-test="editor-code">
+                    <div class="checkbox"></div>
+                    <div class="test-label">코드 블록</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>3️⃣ 데이터 영속성</h2>
+                <div class="test-item" data-test="indexeddb-check">
+                    <div class="checkbox"></div>
+                    <div class="test-label">IndexedDB 저장 확인 (F12 → Application)</div>
+                </div>
+                <div class="test-item" data-test="refresh-persist">
+                    <div class="checkbox"></div>
+                    <div class="test-label">새로고침 후 데이터 유지 (F5)</div>
+                </div>
+                <div class="test-item" data-test="browser-restart">
+                    <div class="checkbox"></div>
+                    <div class="test-label">브라우저 재시작 후 데이터 유지</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>4️⃣ UI 흐름</h2>
+                <div class="test-item" data-test="ui-navigation">
+                    <div class="checkbox"></div>
+                    <div class="test-label">프로젝트/노트 네비게이션</div>
+                </div>
+                <div class="test-item" data-test="ui-search">
+                    <div class="checkbox"></div>
+                    <div class="test-label">검색 기능 동작</div>
+                </div>
+                <div class="test-item" data-test="ui-panels">
+                    <div class="checkbox"></div>
+                    <div class="test-label">사이드 패널 토글 및 리사이징</div>
+                </div>
+                <div class="test-item" data-test="ui-responsive">
+                    <div class="checkbox"></div>
+                    <div class="test-label">반응형 레이아웃 확인</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>5️⃣ 고급 기능 (선택)</h2>
+                <div class="test-item" data-test="version-history">
+                    <div class="checkbox"></div>
+                    <div class="test-label">버전 관리 및 복원</div>
+                </div>
+                <div class="test-item" data-test="references">
+                    <div class="checkbox"></div>
+                    <div class="test-label">참조 문헌 추가</div>
+                </div>
+                <div class="test-item" data-test="bi-links">
+                    <div class="checkbox"></div>
+                    <div class="test-label">노트 간 링크 및 Backlinks</div>
+                </div>
+                <div class="test-item" data-test="export">
+                    <div class="checkbox"></div>
+                    <div class="test-label">내보내기 (Markdown/PDF)</div>
+                </div>
+            </div>
+
+            <button class="reset-btn" onclick="resetTests()">🔄 테스트 초기화</button>
+        </div>
+    </div>
+
+    <script>
+        // 테스트 상태 로드
+        function loadTestState() {
+            const saved = localStorage.getItem('scriptstudio-test-state');
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        // 테스트 상태 저장
+        function saveTestState(state) {
+            localStorage.setItem('scriptstudio-test-state', JSON.stringify(state));
+        }
+
+        // 통계 업데이트
+        function updateStats() {
+            const items = document.querySelectorAll('.test-item');
+            const checked = document.querySelectorAll('.test-item.checked');
+            const total = items.length;
+            const complete = checked.length;
+            const percent = total > 0 ? Math.round((complete / total) * 100) : 0;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('checkedCount').textContent = complete;
+            document.getElementById('percentCount').textContent = percent + '%';
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        // 초기화
+        function init() {
+            const state = loadTestState();
+            const items = document.querySelectorAll('.test-item');
+            
+            items.forEach(item => {
+                const testId = item.dataset.test;
+                
+                // 저장된 상태 복원
+                if (state[testId]) {
+                    item.classList.add('checked');
+                }
+                
+                // 클릭 이벤트
+                item.addEventListener('click', () => {
+                    item.classList.toggle('checked');
+                    state[testId] = item.classList.contains('checked');
+                    saveTestState(state);
+                    updateStats();
+                });
+            });
+            
+            updateStats();
+        }
+
+        // 테스트 초기화
+        function resetTests() {
+            if (confirm('모든 테스트 결과를 초기화하시겠습니까?')) {
+                localStorage.removeItem('scriptstudio-test-state');
+                document.querySelectorAll('.test-item').forEach(item => {
+                    item.classList.remove('checked');
+                });
+                updateStats();
+            }
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
