@@ -136,19 +136,19 @@ class SyncManager {
   async pullFromServer() {
     console.log("⬇️ 서버에서 데이터 가져오는 중...");
 
-    const stores = ["notes", "projects", "templates", "references", "folders"];
+    const stores = ["notes", "projects", "templates", "references"];
 
-    for (const storeName of stores) {
+    for (const store of stores) {
       try {
         // 서버에서 데이터 가져오기
-        const serverData = await this.fetchFromServer(storeName);
+        const serverData = await this.fetchFromServer(store);
 
         if (!serverData || !Array.isArray(serverData)) {
           continue;
         }
 
         // 로컬 데이터 가져오기
-        const localData = await localDB.getAll(storeName);
+        const localData = await localDB.getAll(store);
         const localMap = new Map(localData.map((item) => [item.id, item]));
 
         // 서버 데이터와 비교하여 업데이트
@@ -157,25 +157,23 @@ class SyncManager {
 
           if (!localItem) {
             // 로컬에 없는 항목 - 추가
-            await localDB.put(storeName, {
+            await localDB.put(store, {
               ...serverItem,
               sync_status: "synced",
             });
           } else {
             // 로컬에 있는 항목 - 타임스탬프 비교
-            const serverTime =
-              serverItem.updated_at || serverItem.updated_date || 0;
-            const localTime =
-              localItem.updated_at || localItem.updated_date || 0;
+            const serverTime = serverItem.updated_at || 0;
+            const localTime = localItem.updated_at || 0;
 
-            if (new Date(serverTime) > new Date(localTime)) {
+            if (serverTime > localTime) {
               // 서버가 더 최신
               if (localItem.sync_status === "pending") {
                 // 충돌 발생 - 처리 필요
-                await this.handleConflict(storeName, localItem, serverItem);
+                await this.handleConflict(store, localItem, serverItem);
               } else {
                 // 서버 버전으로 업데이트
-                await localDB.put(storeName, {
+                await localDB.put(store, {
                   ...serverItem,
                   sync_status: "synced",
                 });
@@ -184,11 +182,9 @@ class SyncManager {
           }
         }
 
-        console.log(
-          `✅ ${storeName} 동기화 완료 (${serverData.length}개 항목)`
-        );
+        console.log(`✅ ${store} 동기화 완료 (${serverData.length}개 항목)`);
       } catch (error) {
-        console.error(`❌ ${storeName} 가져오기 실패:`, error);
+        console.error(`❌ ${store} 가져오기 실패:`, error);
       }
     }
   }
@@ -255,9 +251,7 @@ class SyncManager {
             }
           }
 
-          console.log(
-            `✅ ${item.action} 성공: ${item.storeName}/${item.data?.id || ""}`
-          );
+          console.log(`✅ ${item.action} 성공: ${item.storeName}/${item.data?.id || ''}`);
         }
       } catch (error) {
         console.error(`❌ ${item.action} 실패:`, error);

@@ -58,10 +58,6 @@ export const DataProvider = ({ children }) => {
         await initDB();
         console.log("✅ IndexedDB 초기화 완료");
 
-        // syncManager에 API 클라이언트 설정
-        syncManager.setApiClient(client);
-        console.log("✅ syncManager API 클라이언트 설정 완료");
-
         // 샘플 데이터 초기화 (처음 실행 시)
         await initSampleData();
 

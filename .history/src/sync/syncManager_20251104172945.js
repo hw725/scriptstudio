@@ -163,10 +163,8 @@ class SyncManager {
             });
           } else {
             // 로컬에 있는 항목 - 타임스탬프 비교
-            const serverTime =
-              serverItem.updated_at || serverItem.updated_date || 0;
-            const localTime =
-              localItem.updated_at || localItem.updated_date || 0;
+            const serverTime = serverItem.updated_at || serverItem.updated_date || 0;
+            const localTime = localItem.updated_at || localItem.updated_date || 0;
 
             if (new Date(serverTime) > new Date(localTime)) {
               // 서버가 더 최신
@@ -184,9 +182,7 @@ class SyncManager {
           }
         }
 
-        console.log(
-          `✅ ${storeName} 동기화 완료 (${serverData.length}개 항목)`
-        );
+        console.log(`✅ ${storeName} 동기화 완료 (${serverData.length}개 항목)`);
       } catch (error) {
         console.error(`❌ ${storeName} 가져오기 실패:`, error);
       }
@@ -255,9 +251,7 @@ class SyncManager {
             }
           }
 
-          console.log(
-            `✅ ${item.action} 성공: ${item.storeName}/${item.data?.id || ""}`
-          );
+          console.log(`✅ ${item.action} 성공: ${item.storeName}/${item.data?.id || ''}`);
         }
       } catch (error) {
         console.error(`❌ ${item.action} 실패:`, error);

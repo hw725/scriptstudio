@@ -15,13 +15,10 @@ class OfflineEntityWrapper {
           return data;
         }
       } catch (error) {
-        console.error(
-          `[${this.storeName}] 온라인 list 실패, 로컬 데이터 사용:`,
-          error
-        );
+        console.error(`[${this.storeName}] 온라인 list 실패, 로컬 데이터 사용:`, error);
       }
     }
-
+    
     // 오프라인이거나 API 실패 시 로컬 데이터 반환
     return this.getLocalList();
   }
@@ -35,13 +32,10 @@ class OfflineEntityWrapper {
           return data;
         }
       } catch (error) {
-        console.error(
-          `[${this.storeName}] 온라인 get 실패, 로컬 데이터 사용:`,
-          error
-        );
+        console.error(`[${this.storeName}] 온라인 get 실패, 로컬 데이터 사용:`, error);
       }
     }
-
+    
     // 오프라인이거나 API 실패 시 로컬 데이터 반환
     return localDB.get(this.storeName, id);
   }
@@ -60,18 +54,15 @@ class OfflineEntityWrapper {
       try {
         console.log(`[${this.storeName}] 서버에 create 요청:`, localData.id);
         const serverData = await this.apiEntity.create(localData);
-
+        
         // 서버 저장 성공 시 로컬에도 synced 상태로 캐싱
         const syncedData = { ...serverData, sync_status: "synced" };
         await localDB.put(this.storeName, syncedData);
-
+        
         console.log(`[${this.storeName}] ✅ 서버 저장 성공:`, serverData.id);
         return serverData;
       } catch (error) {
-        console.error(
-          `[${this.storeName}] ❌ 서버 저장 실패, 큐에 추가:`,
-          error
-        );
+        console.error(`[${this.storeName}] ❌ 서버 저장 실패, 큐에 추가:`, error);
         // 서버 저장 실패 시 로컬에 pending으로 저장하고 큐에 추가
         await localDB.put(this.storeName, localData);
         await this.addToSyncQueue("create", localData);
@@ -99,18 +90,15 @@ class OfflineEntityWrapper {
       try {
         console.log(`[${this.storeName}] 서버에 update 요청:`, id);
         const serverData = await this.apiEntity.update(id, data);
-
+        
         // 서버 업데이트 성공 시 로컬에도 synced 상태로 캐싱
         const syncedData = { ...serverData, sync_status: "synced" };
         await localDB.put(this.storeName, syncedData);
-
+        
         console.log(`[${this.storeName}] ✅ 서버 업데이트 성공:`, id);
         return serverData;
       } catch (error) {
-        console.error(
-          `[${this.storeName}] ❌ 서버 업데이트 실패, 큐에 추가:`,
-          error
-        );
+        console.error(`[${this.storeName}] ❌ 서버 업데이트 실패, 큐에 추가:`, error);
         // 서버 업데이트 실패 시 로컬에 pending으로 저장하고 큐에 추가
         await localDB.put(this.storeName, localData);
         await this.addToSyncQueue("update", localData);
@@ -131,22 +119,16 @@ class OfflineEntityWrapper {
       try {
         console.log(`[${this.storeName}] 서버에 delete 요청:`, id);
         await this.apiEntity.delete(id);
-
+        
         // 서버 삭제 성공 시 로컬에서도 삭제
         await localDB.delete(this.storeName, id);
-
+        
         console.log(`[${this.storeName}] ✅ 서버 삭제 성공:`, id);
         return { success: true };
       } catch (error) {
-        console.error(
-          `[${this.storeName}] ❌ 서버 삭제 실패, 큐에 추가:`,
-          error
-        );
+        console.error(`[${this.storeName}] ❌ 서버 삭제 실패, 큐에 추가:`, error);
         // 서버 삭제 실패 시 pending_delete로 표시하고 큐에 추가
-        await localDB.put(this.storeName, {
-          id,
-          sync_status: "pending_delete",
-        });
+        await localDB.put(this.storeName, { id, sync_status: "pending_delete" });
         await this.addToSyncQueue("delete", { id });
         return { success: true };
       }
