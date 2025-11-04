@@ -144,11 +144,30 @@ export const localDB = {
    */
   async put(store, data) {
     const db = await initDB();
-    const itemWithMeta = {
+    // 기존 항목이 있으면 병합하여 필드 손실 방지
+    let existing = undefined;
+    try {
+      if (data && data.id) {
+        existing = await db.get(store, data.id);
+      }
+    } catch {
+      // ignore read error and proceed with non-merged put
+    }
+
+    const merged = {
+      ...(existing || {}),
       ...data,
-      updated_at: data.updated_at || Date.now(),
-      sync_status: data.sync_status || "pending",
     };
+
+    const itemWithMeta = {
+      ...merged,
+      updated_at: merged.updated_at || Date.now(),
+      sync_status:
+        merged.sync_status !== undefined
+          ? merged.sync_status
+          : existing?.sync_status || "pending",
+    };
+
     await db.put(store, itemWithMeta);
     return itemWithMeta;
   },

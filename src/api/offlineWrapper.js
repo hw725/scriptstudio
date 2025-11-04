@@ -29,13 +29,13 @@ class OfflineEntityWrapper {
 
         const byId = new Map(safeServer.map((i) => [i.id, i]));
         for (const p of pendingLocal) {
-          const existing = byId.get(p.id);
-          // 시간 비교로 더 최신 것을 선택 (로컬 우선 적용)
+          const existing = byId.get(p.id) || {};
+          // 시간 비교로 더 최신 것을 선택 (로컬 우선 적용)하되 병합하며 필드 손실 방지
           const serverTime =
             existing?.updated_date || existing?.updated_at || 0;
           const localTime = p.updated_date || p.updated_at || 0;
-          if (!existing || new Date(localTime) >= new Date(serverTime)) {
-            byId.set(p.id, p);
+          if (!existing.id || new Date(localTime) >= new Date(serverTime)) {
+            byId.set(p.id, { ...existing, ...p });
           }
         }
 
