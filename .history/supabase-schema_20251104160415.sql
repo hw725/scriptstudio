@@ -171,9 +171,9 @@ CREATE INDEX IF NOT EXISTS idx_note_versions_note_id ON note_versions(note_id);
 CREATE INDEX IF NOT EXISTS idx_note_versions_created_date ON note_versions(created_date DESC);
 
 -- 참고문헌 인덱스
-CREATE INDEX IF NOT EXISTS idx_references_user_id ON "references"(user_id);
-CREATE INDEX IF NOT EXISTS idx_references_project_id ON "references"(project_id);
-CREATE INDEX IF NOT EXISTS idx_references_type ON "references"(type);
+CREATE INDEX IF NOT EXISTS idx_references_user_id ON references(user_id);
+CREATE INDEX IF NOT EXISTS idx_references_project_id ON references(project_id);
+CREATE INDEX IF NOT EXISTS idx_references_type ON references(type);
 
 -- 템플릿 인덱스
 CREATE INDEX IF NOT EXISTS idx_templates_user_id ON templates(user_id);
@@ -243,18 +243,18 @@ CREATE POLICY "사용자는 자신의 노트 버전만 생성" ON note_versions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- 참고문헌 RLS
-ALTER TABLE "references" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE references ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "사용자는 자신의 참고문헌만 조회" ON "references"
+CREATE POLICY "사용자는 자신의 참고문헌만 조회" ON references
   FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "사용자는 자신의 참고문헌만 생성" ON "references"
+CREATE POLICY "사용자는 자신의 참고문헌만 생성" ON references
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "사용자는 자신의 참고문헌만 수정" ON "references"
+CREATE POLICY "사용자는 자신의 참고문헌만 수정" ON references
   FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "사용자는 자신의 참고문헌만 삭제" ON "references"
+CREATE POLICY "사용자는 자신의 참고문헌만 삭제" ON references
   FOR DELETE USING (auth.uid() = user_id);
 
 -- 템플릿 RLS
@@ -342,7 +342,7 @@ CREATE TRIGGER update_notes_updated_date BEFORE UPDATE ON notes
 CREATE TRIGGER update_note_versions_updated_date BEFORE UPDATE ON note_versions
   FOR EACH ROW EXECUTE FUNCTION update_updated_date();
 
-CREATE TRIGGER update_references_updated_date BEFORE UPDATE ON "references"
+CREATE TRIGGER update_references_updated_date BEFORE UPDATE ON references
   FOR EACH ROW EXECUTE FUNCTION update_updated_date();
 
 CREATE TRIGGER update_templates_updated_date BEFORE UPDATE ON templates

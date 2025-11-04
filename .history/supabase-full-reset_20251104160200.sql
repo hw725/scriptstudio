@@ -1,37 +1,20 @@
 -- =======================================
--- ScriptStudio 완전 초기화 + 새 설치
+-- ScriptStudio 데이터베이스 스키마
 -- =======================================
--- ⚠️ 이 파일 하나로 모든 작업 완료!
--- 
--- 1단계: 기존 테이블 삭제
--- 2단계: 새 스키마 생성
 -- 
 -- 사용법:
--- - Supabase SQL Editor에서 이 파일 전체 복사 → 붙여넣기 → Run
--- - 끝!
+-- - Supabase SQL Editor에서 이 파일 전체 복사 → 붙여넿기 → Run
+-- - IF NOT EXISTS로 안전하게 보호됨 (기존 테이블 유지)
+-- 
+-- ⚠️ 기존 테이블을 삭제하고 싶다면:
+-- supabase-schema-reset.sql 파일을 먼저 실행하세요
 
 -- ===================================
--- 1단계: 기존 스키마 완전 삭제
--- ===================================
-
-DROP TABLE IF EXISTS daily_notes CASCADE;
-DROP TABLE IF EXISTS citation_styles CASCADE;
-DROP TABLE IF EXISTS project_settings CASCADE;
-DROP TABLE IF EXISTS templates CASCADE;
-DROP TABLE IF EXISTS references CASCADE;
-DROP TABLE IF EXISTS note_versions CASCADE;
-DROP TABLE IF EXISTS notes CASCADE;
-DROP TABLE IF EXISTS folders CASCADE;
-DROP TABLE IF EXISTS projects CASCADE;
-
-DROP FUNCTION IF EXISTS update_updated_date() CASCADE;
-
--- ===================================
--- 2단계: 새 스키마 생성
+-- 테이블 생성 (IF NOT EXISTS)
 -- ===================================
 
 -- 1. 프로젝트 테이블
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
@@ -43,7 +26,7 @@ CREATE TABLE projects (
 );
 
 -- 2. 폴더 테이블
-CREATE TABLE folders (
+CREATE TABLE IF NOT EXISTS folders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,

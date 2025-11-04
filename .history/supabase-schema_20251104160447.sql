@@ -342,7 +342,7 @@ CREATE TRIGGER update_notes_updated_date BEFORE UPDATE ON notes
 CREATE TRIGGER update_note_versions_updated_date BEFORE UPDATE ON note_versions
   FOR EACH ROW EXECUTE FUNCTION update_updated_date();
 
-CREATE TRIGGER update_references_updated_date BEFORE UPDATE ON "references"
+CREATE TRIGGER update_references_updated_date BEFORE UPDATE ON references
   FOR EACH ROW EXECUTE FUNCTION update_updated_date();
 
 CREATE TRIGGER update_templates_updated_date BEFORE UPDATE ON templates
