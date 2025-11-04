@@ -23,10 +23,13 @@ export function AuthModal({ isOpen, onClose, onSuccess }) {
     setError("");
 
     try {
+      // 현재 URL을 리디렉션 대상으로 설정 (전체 경로 포함)
+      const redirectUrl = window.location.href;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
