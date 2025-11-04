@@ -10,6 +10,83 @@ class SupabaseEntity {
     this.tableName = tableName;
   }
 
+  // 테이블별 허용 필드 화이트리스트
+  getAllowedFields() {
+    const common = [
+      "id",
+      "user_id",
+      "created_date",
+      "updated_date",
+      "sync_status",
+    ];
+    const map = {
+      notes: [
+        ...common,
+        "project_id",
+        "folder_id",
+        "title",
+        "content",
+        "html_content",
+        "tags",
+        "status",
+        "word_count",
+        "char_count",
+        "reading_time",
+        "metadata",
+      ],
+      note_versions: [
+        ...common,
+        "note_id",
+        "version_number",
+        "content",
+        "html_content",
+        "change_summary",
+      ],
+      projects: [...common, "title", "description", "settings"],
+      folders: [...common, "project_id", "name", "parent_id", "path"],
+      templates: [
+        ...common,
+        "name",
+        "description",
+        "content",
+        "category",
+        "is_public",
+      ],
+      references: [
+        ...common,
+        "project_id",
+        "type",
+        "title",
+        "authors",
+        "year",
+        "publisher",
+        "url",
+        "doi",
+        "isbn",
+        "metadata",
+      ],
+      project_settings: [...common, "project_id", "key", "value"],
+      citation_styles: [...common, "name", "format", "template", "is_default"],
+      daily_notes: [
+        ...common,
+        "date",
+        "content",
+        "html_content",
+        "mood",
+        "tasks",
+        "metadata",
+      ],
+    };
+    return map[this.tableName] || common;
+  }
+
+  filterDataForTable(data) {
+    const allowed = new Set(this.getAllowedFields());
+    return Object.fromEntries(
+      Object.entries(data || {}).filter(([k]) => allowed.has(k))
+    );
+  }
+
   async list(sortBy = "-created_date") {
     console.log(`🌐 Supabase에서 ${this.tableName} 목록 가져오기`);
 
@@ -70,13 +147,14 @@ class SupabaseEntity {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const item = {
+    const itemRaw = {
       ...data,
       id: data.id || crypto.randomUUID(),
       user_id: user?.id, // 자동으로 user_id 추가
       created_date: data.created_date || new Date().toISOString(),
       updated_date: data.updated_date || new Date().toISOString(),
     };
+    const item = this.filterDataForTable(itemRaw);
 
     const { data: result, error } = await supabase
       .from(this.tableName)
@@ -95,10 +173,10 @@ class SupabaseEntity {
   async update(id, data) {
     console.log(`🌐 Supabase에서 ${this.tableName} 업데이트:`, id);
 
-    const updated = {
+    const updated = this.filterDataForTable({
       ...data,
       updated_date: new Date().toISOString(),
-    };
+    });
 
     const { data: result, error } = await supabase
       .from(this.tableName)

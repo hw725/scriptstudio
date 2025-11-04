@@ -9,11 +9,37 @@ class OfflineEntityWrapper {
   async list(sortBy = "-created_date") {
     if (navigator.onLine) {
       try {
-        const data = await this.apiEntity.list(sortBy);
-        if (data) {
-          await this.cacheMultiple(data);
-          return data;
+        // 1) 서버 데이터 가져오기 및 캐시
+        const serverData = await this.apiEntity.list(sortBy);
+        const safeServer = Array.isArray(serverData) ? serverData : [];
+        await this.cacheMultiple(safeServer);
+
+        // 2) 로컬의 pending 항목을 합쳐서 반환 (서버에 아직 반영되지 않은 변경 보존)
+        const localAll = await localDB.getAll(this.storeName);
+        const pendingLocal = localAll.filter(
+          (i) =>
+            i.sync_status &&
+            i.sync_status !== "synced" &&
+            i.sync_status !== "pending_delete"
+        );
+
+        if (pendingLocal.length === 0) {
+          return safeServer;
         }
+
+        const byId = new Map(safeServer.map((i) => [i.id, i]));
+        for (const p of pendingLocal) {
+          const existing = byId.get(p.id);
+          // 시간 비교로 더 최신 것을 선택 (로컬 우선 적용)
+          const serverTime =
+            existing?.updated_date || existing?.updated_at || 0;
+          const localTime = p.updated_date || p.updated_at || 0;
+          if (!existing || new Date(localTime) >= new Date(serverTime)) {
+            byId.set(p.id, p);
+          }
+        }
+
+        return Array.from(byId.values());
       } catch (error) {
         console.error(
           `[${this.storeName}] 온라인 list 실패, 로컬 데이터 사용:`,
@@ -29,11 +55,25 @@ class OfflineEntityWrapper {
   async get(id) {
     if (navigator.onLine) {
       try {
-        const data = await this.apiEntity.get(id);
-        if (data) {
-          await this.cacheSingle(data);
-          return data;
+        const server = await this.apiEntity.get(id);
+        const local = await localDB.get(this.storeName, id);
+
+        // 둘 다 있으면 최신 것을 선택
+        if (server && local) {
+          await this.cacheSingle(server);
+          const serverTime = server.updated_date || server.updated_at || 0;
+          const localTime = local.updated_date || local.updated_at || 0;
+          return new Date(localTime) > new Date(serverTime) ? local : server;
         }
+
+        if (server) {
+          await this.cacheSingle(server);
+          return server;
+        }
+
+        if (local) return local;
+
+        return null;
       } catch (error) {
         console.error(
           `[${this.storeName}] 온라인 get 실패, 로컬 데이터 사용:`,
