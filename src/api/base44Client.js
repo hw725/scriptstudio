@@ -33,6 +33,7 @@ if (OFFLINE) {
 
 export const base44 = client;
 export const base44Client = client;
+export default client;
 
 // 콘솔에서 모드 전환: window.__scriptstudio_offline_set(true/false)
 // 현재 모드 확인: window.__scriptstudio_offline_get()
