@@ -1,270 +1,538 @@
-/**/**
+import { localDB } from "../db/localDB";/**/**
 
- * 🔄 오프라인 래퍼 - Supabase 클라이언트를 오프라인 지원으로 래핑 * 🔄 오프라인 래퍼 - Supabase 클라이언트를 오프라인 지원으로 래핑
 
- *  * 
 
- * 동작 원리: * 동작 원리:
+/** * 🔄 오프라인 래퍼 - Supabase 클라이언트를 오프라인 지원으로 래핑 * 🔄 오프라인 래퍼 - Supabase 클라이언트를 오프라인 지원으로 래핑
 
- * 1. 온라인: Supabase API 호출 → 성공 시 로컬 캐시 저장 * 1. 온라인: Supabase API 호출 → 성공 시 로컬 캐시 저장
+ * 🔄 오프라인 래퍼 - Supabase 클라이언트를 오프라인 지원으로 래핑
+
+ *  *  * 
+
+ * 동작 원리:
+
+ * 1. 온라인: Supabase API 호출 → 성공 시 로컬 캐시 저장 * 동작 원리: * 동작 원리:
+
+ * 2. 오프라인: 로컬 캐시만 사용 → 동기화 큐에 추가
+
+ * 3. 온라인 복귀: 큐의 작업들을 자동으로 서버에 전송 * 1. 온라인: Supabase API 호출 → 성공 시 로컬 캐시 저장 * 1. 온라인: Supabase API 호출 → 성공 시 로컬 캐시 저장
+
+ */
 
  * 2. 오프라인: 로컬 캐시만 사용 → 동기화 큐에 추가 * 2. 오프라인: 로컬 캐시만 사용 → 동기화 큐에 추가
 
- * 3. 온라인 복귀: 큐의 작업들을 자동으로 서버에 전송 * 3. 온라인 복귀: 큐의 작업들을 자동으로 서버에 전송
+/**
 
- */ */
+ * Entity 래퍼 클래스 * 3. 온라인 복귀: 큐의 작업들을 자동으로 서버에 전송 * 3. 온라인 복귀: 큐의 작업들을 자동으로 서버에 전송
 
-export const createOfflineWrapper = (apiClient) => {
+ */
 
-/**  // Entity 래퍼 생성
+class OfflineEntityWrapper { */ */
 
- * Entity 래퍼 클래스  const wrappedEntities = {};
+  constructor(apiEntity, storeName) {
 
- */  
-
-class OfflineEntityWrapper {  for (const [entityName, entity] of Object.entries(apiClient.entities)) {
-
-  constructor(apiEntity, storeName) {    wrappedEntities[entityName] = new OfflineEntityWrapper(entity, entityName.toLowerCase() + "s");
-
-    this.apiEntity = apiEntity;  }
+    this.apiEntity = apiEntity;export const createOfflineWrapper = (apiClient) => {
 
     this.storeName = storeName;
 
-  }  return {
+  }/**  // Entity 래퍼 생성
 
-    entities: wrappedEntities,
 
-  /**    auth: apiClient.auth, // 인증은 그대로 사용
 
-   * 목록 조회 - 온라인 우선, 실패 시 로컬    functions: apiClient.functions, // 함수도 그대로 사용
+  /** * Entity 래퍼 클래스  const wrappedEntities = {};
 
-   */    raw: apiClient.raw, // 원시 클라이언트 접근
+   * 목록 조회 - 온라인 우선, 실패 시 로컬
 
-  async list(sortBy = "-created_date") {  };
+   */ */  
 
-    try {};
+  async list(sortBy = "-created_date") {
+
+    try {class OfflineEntityWrapper {  for (const [entityName, entity] of Object.entries(apiClient.entities)) {
 
       if (navigator.onLine) {
 
-        // 온라인: API 호출/**
+        // 온라인: API 호출  constructor(apiEntity, storeName) {    wrappedEntities[entityName] = new OfflineEntityWrapper(entity, entityName.toLowerCase() + "s");
 
-        const data = await this.apiEntity.list(sortBy); * Entity 래퍼 클래스
+        const data = await this.apiEntity.list(sortBy);
 
-         */
+            this.apiEntity = apiEntity;  }
 
-        // 로컬에 캐시class OfflineEntityWrapper {
+        // 로컬에 캐시
 
-        await this.cacheMultiple(data);  constructor(apiEntity, storeName) {
-
-            this.apiEntity = apiEntity;
-
-        return data;    this.storeName = storeName;
-
-      }  }
-
-    } catch (error) {
-
-      console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);  /**
-
-    }   * 목록 조회 - 온라인 우선, 실패 시 로컬
-
-   */
-
-    // 오프라인이거나 실패 시: 로컬에서 조회  async list(sortBy = "-created_date") {
-
-    return this.getLocalList(sortBy);    try {
-
-  }      if (navigator.onLine) {
-
-        // 온라인: API 호출
-
-  /**        const data = await this.apiEntity.list(sortBy);
-
-   * 단일 항목 조회        
-
-   */        // 로컬에 캐시
-
-  async get(id) {        await this.cacheMultiple(data);
-
-    try {        
-
-      if (navigator.onLine) {        return data;
-
-        // 온라인: API 호출      }
-
-        const data = await this.apiEntity.get(id);    } catch (error) {
-
-              console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);
-
-        if (data) {    }
-
-          // 로컬에 캐시
-
-          await this.cacheSingle(data);    // 오프라인이거나 실패 시: 로컬에서 조회
-
-        }    return this.getLocalList(sortBy);
-
-          }
-
-        return data;
-
-      }  /**
-
-    } catch (error) {   * 단일 항목 조회
-
-      console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);   */
-
-    }  async get(id) {
-
-    try {
-
-    // 오프라인이거나 실패 시: 로컬에서 조회      if (navigator.onLine) {
-
-    return this.getLocalItem(id);        // 온라인: API 호출
-
-  }        const data = await this.apiEntity.get(id);
+        await this.cacheMultiple(data);    this.storeName = storeName;
 
         
 
-  /**        if (data) {
+        return data;  }  return {
 
-   * 생성 - 로컬 즉시 저장 + 온라인 시 서버 전송          // 로컬에 캐시
+      }
 
-   */          await this.cacheSingle(data);
+    } catch (error) {    entities: wrappedEntities,
 
-  async create(data) {        }
+      console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);
 
-    const item = {        
-
-      ...data,        return data;
-
-      id: data.id || crypto.randomUUID(),      }
-
-      created_date: data.created_date || new Date().toISOString(),    } catch (error) {
-
-      updated_date: data.updated_date || new Date().toISOString(),      console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);
-
-      sync_status: "pending",    }
-
-    };
-
-    // 오프라인이거나 실패 시: 로컬에서 조회
-
-    // 1. 로컬에 즉시 저장 (UX 개선)    return this.getLocalItem(id);
-
-    await this.cacheSingle(item);  }
+    }  /**    auth: apiClient.auth, // 인증은 그대로 사용
 
 
 
-    // 2. 온라인이면 서버에 전송 시도  /**
+    // 오프라인이거나 실패 시: 로컬에서 조회   * 목록 조회 - 온라인 우선, 실패 시 로컬    functions: apiClient.functions, // 함수도 그대로 사용
 
-    if (navigator.onLine) {   * 생성 - 로컬 즉시 저장 + 온라인 시 서버 전송
+    return this.getLocalList(sortBy);
 
-      try {   */
+  }   */    raw: apiClient.raw, // 원시 클라이언트 접근
 
-        const serverData = await this.apiEntity.create(item);  async create(data) {
 
-            const item = {
 
-        // 서버 응답으로 로컬 업데이트      ...data,
+  /**  async list(sortBy = "-created_date") {  };
 
-        await this.cacheSingle({      id: data.id || crypto.randomUUID(),
+   * 단일 항목 조회
 
-          ...serverData,      created_date: data.created_date || new Date().toISOString(),
+   */    try {};
 
-          sync_status: "synced",      updated_date: data.updated_date || new Date().toISOString(),
+  async get(id) {
 
-        });      sync_status: "pending",
+    try {      if (navigator.onLine) {
 
-            };
+      if (navigator.onLine) {
 
-        console.log(`✅ 생성 성공 (${this.storeName}):`, serverData.id);
+        // 온라인: API 호출        // 온라인: API 호출/**
 
-        return serverData;    // 1. 로컬에 즉시 저장 (UX 개선)
+        const data = await this.apiEntity.get(id);
 
-      } catch (error) {    await this.cacheSingle(item);
+                const data = await this.apiEntity.list(sortBy); * Entity 래퍼 클래스
 
-        console.warn(`⚠️ 생성 실패, 동기화 큐에 추가 (${this.storeName}):`, error);
+        if (data) {
 
-      }    // 2. 온라인이면 서버에 전송 시도
+          // 로컬에 캐시         */
 
-    }    if (navigator.onLine) {
+          await this.cacheSingle(data);
 
-      try {
+        }        // 로컬에 캐시class OfflineEntityWrapper {
 
-    // 3. 오프라인이거나 실패: 동기화 큐에 추가        const serverData = await this.apiEntity.create(item);
+        
 
-    await this.addToSyncQueue("create", item);        
+        return data;        await this.cacheMultiple(data);  constructor(apiEntity, storeName) {
 
-            // 서버 응답으로 로컬 업데이트
+      }
 
-    return item;        await this.cacheSingle({
+    } catch (error) {            this.apiEntity = apiEntity;
 
-  }          ...serverData,
+      console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);
 
-          sync_status: "synced",
+    }        return data;    this.storeName = storeName;
 
-  /**        });
 
-   * 수정 - 로컬 즉시 저장 + 온라인 시 서버 전송        
 
-   */        console.log(`✅ 생성 성공 (${this.storeName}):`, serverData.id);
+    // 오프라인이거나 실패 시: 로컬에서 조회      }  }
 
-  async update(id, data) {        return serverData;
+    return this.getLocalItem(id);
 
-    const updated = {      } catch (error) {
+  }    } catch (error) {
 
-      ...data,        console.warn(`⚠️ 생성 실패, 동기화 큐에 추가 (${this.storeName}):`, error);
 
-      id,      }
 
-      updated_date: new Date().toISOString(),    }
+  /**      console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);  /**
+
+   * 생성 - 로컬 즉시 저장 + 온라인 시 서버 전송
+
+   */    }   * 목록 조회 - 온라인 우선, 실패 시 로컬
+
+  async create(data) {
+
+    const item = {   */
+
+      ...data,
+
+      id: data.id || crypto.randomUUID(),    // 오프라인이거나 실패 시: 로컬에서 조회  async list(sortBy = "-created_date") {
+
+      created_date: data.created_date || new Date().toISOString(),
+
+      updated_date: data.updated_date || new Date().toISOString(),    return this.getLocalList(sortBy);    try {
 
       sync_status: "pending",
 
-    };    // 3. 오프라인이거나 실패: 동기화 큐에 추가
+    };  }      if (navigator.onLine) {
 
-    await this.addToSyncQueue("create", item);
 
-    // 1. 로컬에 즉시 저장    
 
-    await this.cacheSingle(updated);    return item;
+    // 1. 로컬에 즉시 저장 (UX 개선)        // 온라인: API 호출
 
-  }
+    await this.cacheSingle(item);
+
+  /**        const data = await this.apiEntity.list(sortBy);
 
     // 2. 온라인이면 서버에 전송 시도
 
-    if (navigator.onLine) {  /**
+    if (navigator.onLine) {   * 단일 항목 조회        
 
-      try {   * 수정 - 로컬 즉시 저장 + 온라인 시 서버 전송
+      try {
 
-        const serverData = await this.apiEntity.update(id, data);   */
+        const serverData = await this.apiEntity.create(item);   */        // 로컬에 캐시
 
-          async update(id, data) {
+        
 
-        // 서버 응답으로 로컬 업데이트    const updated = {
+        // 서버 응답으로 로컬 업데이트  async get(id) {        await this.cacheMultiple(data);
 
-        await this.cacheSingle({      ...data,
+        await this.cacheSingle({
 
-          ...serverData,      id,
+          ...serverData,    try {        
 
-          sync_status: "synced",      updated_date: new Date().toISOString(),
+          sync_status: "synced",
 
-        });      sync_status: "pending",
+        });      if (navigator.onLine) {        return data;
 
-            };
+        
 
-        console.log(`✅ 수정 성공 (${this.storeName}):`, id);
+        console.log(`✅ 생성 성공 (${this.storeName}):`, serverData.id);        // 온라인: API 호출      }
 
-        return serverData;    // 1. 로컬에 즉시 저장
+        return serverData;
 
-      } catch (error) {    await this.cacheSingle(updated);
+      } catch (error) {        const data = await this.apiEntity.get(id);    } catch (error) {
+
+        console.warn(`⚠️ 생성 실패, 동기화 큐에 추가 (${this.storeName}):`, error);
+
+      }              console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);
+
+    }
+
+        if (data) {    }
+
+    // 3. 오프라인이거나 실패: 동기화 큐에 추가
+
+    await this.addToSyncQueue("create", item);          // 로컬에 캐시
+
+    
+
+    return item;          await this.cacheSingle(data);    // 오프라인이거나 실패 시: 로컬에서 조회
+
+  }
+
+        }    return this.getLocalList(sortBy);
+
+  /**
+
+   * 수정 - 로컬 즉시 저장 + 온라인 시 서버 전송          }
+
+   */
+
+  async update(id, changes) {        return data;
+
+    const item = {
+
+      ...changes,      }  /**
+
+      id,
+
+      updated_date: new Date().toISOString(),    } catch (error) {   * 단일 항목 조회
+
+      sync_status: "pending",
+
+    };      console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);   */
+
+
+
+    // 1. 로컬에 즉시 저장    }  async get(id) {
+
+    await this.cacheSingle(item);
+
+    try {
+
+    // 2. 온라인이면 서버에 전송 시도
+
+    if (navigator.onLine) {    // 오프라인이거나 실패 시: 로컬에서 조회      if (navigator.onLine) {
+
+      try {
+
+        const serverData = await this.apiEntity.update(id, changes);    return this.getLocalItem(id);        // 온라인: API 호출
+
+        
+
+        // 서버 응답으로 로컬 업데이트  }        const data = await this.apiEntity.get(id);
+
+        await this.cacheSingle({
+
+          ...serverData,        
+
+          sync_status: "synced",
+
+        });  /**        if (data) {
+
+        
+
+        console.log(`✅ 수정 성공 (${this.storeName}):`, id);   * 생성 - 로컬 즉시 저장 + 온라인 시 서버 전송          // 로컬에 캐시
+
+        return serverData;
+
+      } catch (error) {   */          await this.cacheSingle(data);
 
         console.warn(`⚠️ 수정 실패, 동기화 큐에 추가 (${this.storeName}):`, error);
 
-      }    // 2. 온라인이면 서버에 전송 시도
+      }  async create(data) {        }
 
-    }    if (navigator.onLine) {
+    }
+
+    const item = {        
+
+    // 3. 오프라인이거나 실패: 동기화 큐에 추가
+
+    await this.addToSyncQueue("update", item);      ...data,        return data;
+
+    
+
+    return item;      id: data.id || crypto.randomUUID(),      }
+
+  }
+
+      created_date: data.created_date || new Date().toISOString(),    } catch (error) {
+
+  /**
+
+   * 삭제 - 로컬 즉시 삭제 + 온라인 시 서버 전송      updated_date: data.updated_date || new Date().toISOString(),      console.warn(`⚠️ 온라인 조회 실패, 로컬 캐시 사용 (${this.storeName}):`, error);
+
+   */
+
+  async delete(id) {      sync_status: "pending",    }
+
+    // 1. 로컬에서 즉시 삭제
+
+    await localDB.delete(this.storeName, id);    };
+
+
+
+    // 2. 온라인이면 서버에 전송 시도    // 오프라인이거나 실패 시: 로컬에서 조회
+
+    if (navigator.onLine) {
+
+      try {    // 1. 로컬에 즉시 저장 (UX 개선)    return this.getLocalItem(id);
+
+        await this.apiEntity.delete(id);
+
+        console.log(`✅ 삭제 성공 (${this.storeName}):`, id);    await this.cacheSingle(item);  }
+
+        return true;
+
+      } catch (error) {
+
+        console.warn(`⚠️ 삭제 실패, 동기화 큐에 추가 (${this.storeName}):`, error);
+
+      }    // 2. 온라인이면 서버에 전송 시도  /**
+
+    }
+
+    if (navigator.onLine) {   * 생성 - 로컬 즉시 저장 + 온라인 시 서버 전송
+
+    // 3. 오프라인이거나 실패: 동기화 큐에 추가
+
+    await this.addToSyncQueue("delete", { id });      try {   */
+
+    
+
+    return true;        const serverData = await this.apiEntity.create(item);  async create(data) {
+
+  }
+
+            const item = {
+
+  // ==================== 헬퍼 메서드 ====================
+
+        // 서버 응답으로 로컬 업데이트      ...data,
+
+  /**
+
+   * 단일 항목을 로컬에 캐시        await this.cacheSingle({      id: data.id || crypto.randomUUID(),
+
+   */
+
+  async cacheSingle(item) {          ...serverData,      created_date: data.created_date || new Date().toISOString(),
+
+    try {
+
+      await localDB.put(this.storeName, item);          sync_status: "synced",      updated_date: data.updated_date || new Date().toISOString(),
+
+    } catch (error) {
+
+      console.error(`❌ 로컬 캐시 실패 (${this.storeName}):`, error);        });      sync_status: "pending",
+
+    }
+
+  }            };
+
+
+
+  /**        console.log(`✅ 생성 성공 (${this.storeName}):`, serverData.id);
+
+   * 여러 항목을 로컬에 캐시
+
+   */        return serverData;    // 1. 로컬에 즉시 저장 (UX 개선)
+
+  async cacheMultiple(items) {
+
+    try {      } catch (error) {    await this.cacheSingle(item);
+
+      for (const item of items) {
+
+        await localDB.put(this.storeName, item);        console.warn(`⚠️ 생성 실패, 동기화 큐에 추가 (${this.storeName}):`, error);
+
+      }
+
+    } catch (error) {      }    // 2. 온라인이면 서버에 전송 시도
+
+      console.error(`❌ 로컬 캐시 실패 (${this.storeName}):`, error);
+
+    }    }    if (navigator.onLine) {
+
+  }
+
+      try {
+
+  /**
+
+   * 로컬에서 목록 조회    // 3. 오프라인이거나 실패: 동기화 큐에 추가        const serverData = await this.apiEntity.create(item);
+
+   */
+
+  async getLocalList(sortBy = "-created_date") {    await this.addToSyncQueue("create", item);        
+
+    try {
+
+      const items = await localDB.getAll(this.storeName);            // 서버 응답으로 로컬 업데이트
+
+      
+
+      // 정렬    return item;        await this.cacheSingle({
+
+      if (sortBy.startsWith("-")) {
+
+        const field = sortBy.substring(1);  }          ...serverData,
+
+        items.sort((a, b) => (b[field] || "").localeCompare(a[field] || ""));
+
+      } else {          sync_status: "synced",
+
+        items.sort((a, b) => (a[sortBy] || "").localeCompare(b[sortBy] || ""));
+
+      }  /**        });
+
+      
+
+      return items;   * 수정 - 로컬 즉시 저장 + 온라인 시 서버 전송        
+
+    } catch (error) {
+
+      console.error(`❌ 로컬 조회 실패 (${this.storeName}):`, error);   */        console.log(`✅ 생성 성공 (${this.storeName}):`, serverData.id);
+
+      return [];
+
+    }  async update(id, data) {        return serverData;
+
+  }
+
+    const updated = {      } catch (error) {
+
+  /**
+
+   * 로컬에서 단일 항목 조회      ...data,        console.warn(`⚠️ 생성 실패, 동기화 큐에 추가 (${this.storeName}):`, error);
+
+   */
+
+  async getLocalItem(id) {      id,      }
+
+    try {
+
+      return await localDB.get(this.storeName, id);      updated_date: new Date().toISOString(),    }
+
+    } catch (error) {
+
+      console.error(`❌ 로컬 조회 실패 (${this.storeName}):`, error);      sync_status: "pending",
+
+      return null;
+
+    }    };    // 3. 오프라인이거나 실패: 동기화 큐에 추가
+
+  }
+
+    await this.addToSyncQueue("create", item);
+
+  /**
+
+   * 동기화 큐에 작업 추가    // 1. 로컬에 즉시 저장    
+
+   */
+
+  async addToSyncQueue(action, data) {    await this.cacheSingle(updated);    return item;
+
+    try {
+
+      await localDB.put("syncQueue", {  }
+
+        id: crypto.randomUUID(),
+
+        store: this.storeName,    // 2. 온라인이면 서버에 전송 시도
+
+        action,
+
+        data,    if (navigator.onLine) {  /**
+
+        timestamp: Date.now(),
+
+        status: "pending",      try {   * 수정 - 로컬 즉시 저장 + 온라인 시 서버 전송
+
+      });
+
+      console.log(`📦 동기화 큐에 추가 (${action}):`, this.storeName);        const serverData = await this.apiEntity.update(id, data);   */
+
+    } catch (error) {
+
+      console.error(`❌ 동기화 큐 추가 실패 (${this.storeName}):`, error);          async update(id, data) {
+
+    }
+
+  }        // 서버 응답으로 로컬 업데이트    const updated = {
+
+}
+
+        await this.cacheSingle({      ...data,
+
+/**
+
+ * 오프라인 래퍼 생성 함수          ...serverData,      id,
+
+ */
+
+export const createOfflineWrapper = (apiClient) => {          sync_status: "synced",      updated_date: new Date().toISOString(),
+
+  // Entity 래퍼 생성
+
+  const wrappedEntities = {};        });      sync_status: "pending",
+
+  
+
+  for (const [entityName, entity] of Object.entries(apiClient.entities)) {            };
+
+    wrappedEntities[entityName] = new OfflineEntityWrapper(
+
+      entity,         console.log(`✅ 수정 성공 (${this.storeName}):`, id);
+
+      entityName.toLowerCase() + "s"
+
+    );        return serverData;    // 1. 로컬에 즉시 저장
+
+  }
+
+      } catch (error) {    await this.cacheSingle(updated);
+
+  return {
+
+    entities: wrappedEntities,        console.warn(`⚠️ 수정 실패, 동기화 큐에 추가 (${this.storeName}):`, error);
+
+    auth: apiClient.auth, // 인증은 그대로 사용
+
+    functions: apiClient.functions, // 함수도 그대로 사용      }    // 2. 온라인이면 서버에 전송 시도
+
+    raw: apiClient.raw, // 원시 클라이언트 접근
+
+  };    }    if (navigator.onLine) {
+
+};
 
       try {
 
