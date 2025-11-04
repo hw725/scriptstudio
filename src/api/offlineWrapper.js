@@ -37,7 +37,7 @@ class OfflineEntityWrapper {
       ...data,
       id: data.id || crypto.randomUUID(),
       created_date: data.created_date || new Date().toISOString(),
-      sync_status: "pending"
+      sync_status: "pending",
     };
     await localDB.put(this.storeName, localData);
     if (navigator.onLine) {
@@ -91,7 +91,8 @@ class OfflineEntityWrapper {
   }
 
   async cacheSingle(data) {
-    if (data?.id) await localDB.put(this.storeName, { ...data, sync_status: "synced" });
+    if (data?.id)
+      await localDB.put(this.storeName, { ...data, sync_status: "synced" });
   }
 
   async cacheMultiple(dataArray) {
@@ -102,18 +103,39 @@ class OfflineEntityWrapper {
 
   async getLocalList() {
     const all = await localDB.getAll(this.storeName);
-    return all.filter(i => i.sync_status !== "pending_delete");
+    return all.filter((i) => i.sync_status !== "pending_delete");
   }
 
   async addToSyncQueue(action, data) {
-    await localDB.addToSyncQueue({ action, storeName: this.storeName, data, timestamp: Date.now() });
+    await localDB.addToSyncQueue({
+      action,
+      storeName: this.storeName,
+      data,
+      timestamp: Date.now(),
+    });
   }
 }
 
 export const createOfflineWrapper = (apiClient) => {
   const wrappedEntities = {};
+
+  // Entity 이름과 테이블명 매칭
+  const entityToTable = {
+    Note: "notes",
+    Folder: "folders",
+    Reference: "references",
+    Project: "projects",
+    Template: "templates",
+    ProjectSettings: "project_settings",
+    CitationStyle: "citation_styles",
+    NoteVersion: "note_versions",
+    DailyNote: "daily_notes",
+  };
+
   for (const [entityName, entity] of Object.entries(apiClient.entities)) {
-    wrappedEntities[entityName] = new OfflineEntityWrapper(entity, entityName);
+    const storeName = entityToTable[entityName] || entityName.toLowerCase();
+    wrappedEntities[entityName] = new OfflineEntityWrapper(entity, storeName);
   }
+
   return { ...apiClient, entities: wrappedEntities };
 };
