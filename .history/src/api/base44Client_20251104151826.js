@@ -5,11 +5,11 @@ import { getOfflineMode } from "@/lib/offline-mode";
 
 /**
  * 🔥 하이브리드 클라이언트 - 오프라인/온라인 자동 전환
- *
+ * 
  * 오프라인 모드 (VITE_OFFLINE_MODE=true):
  *   - 100% 로컬 IndexedDB만 사용
  *   - 네트워크 요청 없음
- *
+ * 
  * 온라인 모드 (VITE_OFFLINE_MODE=false):
  *   - Supabase 백엔드 사용
  *   - 자동 로컬 캐싱
