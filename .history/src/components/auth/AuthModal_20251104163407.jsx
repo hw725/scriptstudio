@@ -28,10 +28,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }) {
         options: {
           redirectTo: window.location.origin,
           queryParams: {
-            access_type: "offline",
-            prompt: "consent",
+            access_type: 'offline',
+            prompt: 'consent',
           },
-          scopes: "email profile",
+          scopes: 'email profile',
         },
       });
 
