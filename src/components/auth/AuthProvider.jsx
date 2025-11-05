@@ -19,10 +19,8 @@ export function AuthProvider({ children }) {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      // 로그인 안 되어 있으면 모달 표시
-      if (!session) {
-        setShowAuthModal(true);
-      }
+      // 로그인되어 있으면 모달 닫기, 아니면 열기
+      setShowAuthModal(!session);
     });
 
     // 인증 상태 변경 감지
@@ -30,6 +28,8 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      // 세션이 있으면 모달 닫기, 없으면 열기
+      setShowAuthModal(!session);
     });
 
     return () => subscription.unsubscribe();
