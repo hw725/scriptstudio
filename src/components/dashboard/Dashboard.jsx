@@ -20,7 +20,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, isToday, isYesterday } from "date-fns";
 import PomoFlowStats from "./PomoFlowStats";
-import ImportBackupButton from "./ImportBackupButton";
+import ImportBackupButton from "./ImportBackupButton.jsx";
 
 const StatCard = ({
   title,
