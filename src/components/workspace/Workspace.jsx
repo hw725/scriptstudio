@@ -18,7 +18,9 @@ import { Button } from "@/components/ui/button";
 import { LayoutDashboard } from "lucide-react";
 import NewNoteModal from "./NewNoteModal";
 import DailyNotesView from "./DailyNotesView";
-import TranslationEditor from "./TranslationEditor"; // New import
+import TranslationEditor from "./TranslationEditor";
+import PomoFlowPanel from "./PomoFlowPanel";
+import { getOfflineMode } from "@/lib/offline-mode";
 
 export default function WorkspacePage() {
   const [selectedNoteId, setSelectedNoteId] = useState(null);
@@ -286,6 +288,18 @@ export default function WorkspacePage() {
             currentProject={currentProject}
           />
         )}
+
+        {/* PomoFlow timer panel (shown in editor view when online) */}
+        {!getOfflineMode() &&
+          viewMode === "editor" &&
+          !isTranslationMode &&
+          selectedNote && (
+            <PomoFlowPanel
+              note={selectedNote}
+              isVisible={true}
+              onToggle={() => {}}
+            />
+          )}
       </div>
 
       <NewNoteModal

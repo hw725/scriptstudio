@@ -25,3 +25,12 @@ dist-ssr
 .history/
 
 .env
+
+# Export files
+export.json
+export_new.json
+export*.json
+
+# Supabase temp files
+supabase/.temp/
+supabase/functions/.temp/
