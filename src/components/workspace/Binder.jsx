@@ -472,9 +472,9 @@ export default function Binder({
         )
       : notes;
 
-  const handleCommitNewItem = () => {
+  const handleCommitNewItem = async () => {
     setNewItem(null);
-    refetchData();
+    await refetchData(); // await 추가
   };
 
   const handleCommitRename = async (itemId, newName) => {
@@ -491,9 +491,10 @@ export default function Binder({
         } else if (isReference) {
           await Reference.update(itemId, { title: newName });
         }
-        refetchData();
+        await refetchData(); // await 추가
       } catch (error) {
         console.error("이름 변경 실패:", error);
+        await refetchData(); // 에러 시에도 새로고침
       }
     }
     setRenamingItemId(null);
@@ -517,9 +518,10 @@ export default function Binder({
         } else if (type === "reference") {
           await Reference.delete(itemId);
         }
-        refetchData();
+        await refetchData(); // await 추가
       } catch (error) {
         console.error("삭제 실패:", error);
+        await refetchData(); // 에러 시에도 새로고침
       }
     }
   };
@@ -531,9 +533,10 @@ export default function Binder({
       } else if (type === "folder") {
         await FolderEntity.update(item.id, { project_id: projectId });
       }
-      refetchData();
+      await refetchData(); // await 추가
     } catch (error) {
       console.error("프로젝트 이동 실패:", error);
+      await refetchData(); // 에러 시에도 새로고침
     }
   };
 
