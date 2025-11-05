@@ -53,9 +53,14 @@ const RecentItem = ({ item, type, onSelect }) => {
 
   const Icon = type === "note" ? FileText : BookOpen;
 
+  const handleClick = () => {
+    console.log("🖱️ RecentItem 클릭됨:", item.title, type);
+    onSelect(item, type);
+  };
+
   return (
     <div
-      onClick={() => onSelect(item, type)}
+      onClick={handleClick}
       className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer border border-transparent hover:border-slate-200 transition-all"
     >
       <Icon className="h-5 w-5 text-slate-500" />
@@ -146,6 +151,12 @@ export default function DashboardPage() {
   const [recentItems, setRecentItems] = useState([]);
 
   useEffect(() => {
+    console.log("📊 Dashboard 데이터:", {
+      notes: notes.length,
+      references: references.length,
+      noteTitles: notes.map((n) => n.title),
+    });
+
     const allItems = [
       ...notes.map((note) => ({ ...note, type: "note" })),
       ...references.map((ref) => ({ ...ref, type: "reference" })),
@@ -155,6 +166,11 @@ export default function DashboardPage() {
       .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))
       .slice(0, 5);
 
+    console.log(
+      "🕐 최근 활동 항목:",
+      sorted.length,
+      sorted.map((i) => i.title)
+    );
     setRecentItems(sorted);
   }, [notes, references]);
 
@@ -164,6 +180,7 @@ export default function DashboardPage() {
   };
 
   const handleSelectRecentItem = (item, type) => {
+    console.log("🔍 handleSelectRecentItem 호출:", { item, type });
     if (type === "note") {
       if (item.project_id) {
         const project = projects.find((p) => p.id === item.project_id);
@@ -171,7 +188,9 @@ export default function DashboardPage() {
       } else {
         setCurrentProject(null);
       }
-      window.location.href = createPageUrl("Workspace") + `?noteId=${item.id}`;
+      const targetUrl = createPageUrl("Workspace") + `?noteId=${item.id}`;
+      console.log("🔗 이동할 URL:", targetUrl);
+      window.location.href = targetUrl;
     } else if (type === "reference") {
       window.location.href =
         createPageUrl("Workspace") + `?referenceId=${item.id}`;

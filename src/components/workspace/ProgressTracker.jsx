@@ -34,20 +34,25 @@ export default function ProgressTracker({
 
   const loadSettings = useCallback(async () => {
     try {
-      // 프로젝트별 설정을 찾아 로드합니다.
-      // 'global' project_id is used for settings not tied to a specific project (e.g., overall progress).
-      const settingsList = await ProjectSettings.filter({
-        project_id: currentProject?.id || "global",
-      });
+      // currentProject가 없으면 설정을 로드하지 않음
+      if (!currentProject) {
+        return;
+      }
 
-      if (settingsList.length > 0) {
-        setSettings(settingsList[0]);
-        setTempSettings(settingsList[0]);
+      // 프로젝트별 설정을 찾아 로드합니다.
+      const settingsList = await ProjectSettings.list();
+      const filtered = settingsList.filter(
+        (s) => s.project_id === currentProject.id
+      );
+
+      if (filtered.length > 0) {
+        setSettings(filtered[0]);
+        setTempSettings(filtered[0]);
       } else {
         // 설정이 없으면 새로 생성
         const newSettings = await ProjectSettings.create({
-          project_id: currentProject?.id || "global",
-          project_title: currentProject?.title || "전체",
+          project_id: currentProject.id,
+          project_title: currentProject.title || "프로젝트",
           daily_word_target: 500, // 글자 수로 변경 (한국어 기준)
           project_word_target: 50000, // 이 값은 편집 UI에서 제거되고, 실제로는 각 노트의 target_words 합계로 사용됨. 초기값으로만 존재.
           current_session_words: 0, // 이 값은 오늘 쓴 글자 수로 대체될 예정이므로, 현재는 사용되지 않음

@@ -153,11 +153,17 @@ export const DataProvider = ({ children }) => {
 
   // 현재 프로젝트에 따라 필터링된 데이터
   const filteredNotes = currentProject
-    ? notes.filter((note) => note.project_id === currentProject.id)
+    ? notes.filter(
+        (note) =>
+          note.project_id === currentProject.id || note.project_id === null
+      )
     : notes; // "전체 문서"일 때는 모든 문서 표시
 
   const filteredFolders = currentProject
-    ? folders.filter((folder) => folder.project_id === currentProject.id)
+    ? folders.filter(
+        (folder) =>
+          folder.project_id === currentProject.id || folder.project_id === null
+      )
     : folders; // "전체 문서"일 때는 모든 폴더 표시 (변경됨)
 
   const value = {

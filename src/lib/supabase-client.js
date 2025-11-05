@@ -26,4 +26,35 @@ const supabaseAnonKey = getEnvVar(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0"
 );
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.localStorage,
+    storageKey: "sb-celspwnmirsebfzbyopr-auth-token",
+    flowType: "pkce",
+  },
+});
+
+// 디버깅: 클라이언트 생성 확인
+console.log("🔧 Supabase Client 생성:", {
+  supabaseUrl,
+  anonKeyPrefix: supabaseAnonKey.slice(0, 20) + "...",
+  storageKey: "sb-celspwnmirsebfzbyopr-auth-token",
+});
+
+// 세션 즉시 확인
+supabase.auth.getSession().then(({ data: { session } }) => {
+  console.log(
+    "🔧 Client 생성 직후 세션:",
+    session ? "있음" : "없음",
+    session?.user?.id
+  );
+});
+
+// 전역 노출 (디버깅용)
+if (typeof window !== "undefined") {
+  window.supabase = supabase;
+  console.log("🌍 window.supabase 노출 완료");
+}

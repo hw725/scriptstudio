@@ -23,24 +23,22 @@ export function AuthModal({ isOpen, onClose, onSuccess: _onSuccess }) {
     setError("");
 
     try {
-      // 현재 URL을 리디렉션 대상으로 설정 (전체 경로 포함)
-      const redirectUrl = window.location.href;
+      // origin만 사용 (http://localhost:5173 또는 https://scriptstudio.vercel.app)
+      const redirectUrl = window.location.origin;
+
+      console.log("🔐 OAuth redirectTo:", redirectUrl);
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: redirectUrl,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
-          scopes: "email profile",
         },
       });
 
       if (error) throw error;
       // OAuth는 리다이렉트되므로 여기서는 아무것도 안 함
     } catch (error) {
+      console.error("🔐 OAuth 에러:", error);
       setError(error.message);
       setLoading(false);
     }

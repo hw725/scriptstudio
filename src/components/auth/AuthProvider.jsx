@@ -14,31 +14,62 @@ export function AuthProvider({ children }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
-    // URL fragment 제거 (OAuth 리다이렉트 후 남은 토큰 정리)
-    if (window.location.hash) {
-      window.history.replaceState(null, "", window.location.pathname);
-    }
-
     // 현재 세션 확인
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+      console.log(
+        "🔐 세션 확인:",
+        session ? "있음" : "없음",
+        session?.user?.id
+      );
 
-      // 로그인 안 되어 있으면 모달 표시
-      if (!session) {
+      // 세션이 있으면 수동으로 localStorage에 저장
+      if (session) {
+        const storageKey = "sb-celspwnmirsebfzbyopr-auth-token";
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(session));
+          console.log("✅ 세션을 localStorage에 저장했습니다");
+        } catch (e) {
+          console.error("❌ localStorage 저장 실패:", e);
+        }
+
+        setShowAuthModal(false);
+      } else {
+        // 로그인 안 되어 있으면 모달 표시
         setShowAuthModal(true);
       }
+
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     // 인증 상태 변경 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      // OAuth 리다이렉트 후 세션이 생성되면 모달 닫기
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("🔐 Auth 상태 변경:", event, session?.user?.id);
+
+      // 세션이 생성/변경되면 localStorage에 저장
       if (session) {
+        const storageKey = "sb-celspwnmirsebfzbyopr-auth-token";
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(session));
+          console.log("✅ 세션 변경 감지 → localStorage 저장");
+        } catch (e) {
+          console.error("❌ localStorage 저장 실패:", e);
+        }
+
         setShowAuthModal(false);
+
+        // 세션 생성 후 URL fragment 제거 (약간 지연)
+        setTimeout(() => {
+          if (window.location.hash) {
+            console.log("🧹 URL fragment 제거");
+            window.history.replaceState(null, "", window.location.pathname);
+          }
+        }, 1000);
       }
+
+      setUser(session?.user ?? null);
     });
 
     return () => subscription.unsubscribe();

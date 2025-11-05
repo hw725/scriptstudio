@@ -9,33 +9,26 @@ class OfflineEntityWrapper {
   async list(sortBy = "-created_date") {
     if (navigator.onLine) {
       try {
-        // 1) 서버 데이터 가져오기 및 캐시
+        // 1) 로컬 데이터 먼저 가져오기 (즉시 표시용)
+        const localAll = await localDB.getAll(this.storeName);
+
+        // 2) 서버 데이터 가져오기 및 캐시 (백그라운드)
         const serverData = await this.apiEntity.list(sortBy);
         const safeServer = Array.isArray(serverData) ? serverData : [];
         await this.cacheMultiple(safeServer);
 
-        // 2) 로컬의 pending 항목을 합쳐서 반환 (서버에 아직 반영되지 않은 변경 보존)
-        const localAll = await localDB.getAll(this.storeName);
-        const pendingLocal = localAll.filter(
-          (i) =>
-            i.sync_status &&
-            i.sync_status !== "synced" &&
-            i.sync_status !== "pending_delete"
-        );
-
-        if (pendingLocal.length === 0) {
-          return safeServer;
-        }
-
+        // 3) 로컬과 서버 데이터 병합
         const byId = new Map(safeServer.map((i) => [i.id, i]));
-        for (const p of pendingLocal) {
-          const existing = byId.get(p.id) || {};
-          // 시간 비교로 더 최신 것을 선택 (로컬 우선 적용)하되 병합하며 필드 손실 방지
+
+        for (const local of localAll) {
+          const existing = byId.get(local.id) || {};
           const serverTime =
             existing?.updated_date || existing?.updated_at || 0;
-          const localTime = p.updated_date || p.updated_at || 0;
+          const localTime = local.updated_date || local.updated_at || 0;
+
+          // 로컬에만 있거나, 로컬이 더 최신이면 로컬 데이터 사용
           if (!existing.id || new Date(localTime) >= new Date(serverTime)) {
-            byId.set(p.id, { ...existing, ...p });
+            byId.set(local.id, { ...existing, ...local });
           }
         }
 
