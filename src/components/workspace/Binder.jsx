@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
-import { Folder as FolderEntity } from '@/api/entities';
-import { Note } from '@/api/entities';
-import { Reference } from '@/api/entities';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import React, { useState } from "react";
+import { Folder as FolderEntity } from "@/api/entities";
+import { Note } from "@/api/entities";
+import { Reference } from "@/api/entities";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import {
   ChevronDown,
   ChevronRight,
@@ -21,10 +20,10 @@ import {
   Download,
   GripVertical,
   Languages,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -34,24 +33,23 @@ import {
   ContextMenuSubContent,
   ContextMenuSubTrigger,
   ContextMenuTrigger, // This was the duplicated import, now correctly here.
-} from '@/components/ui/context-menu';
+} from "@/components/ui/context-menu";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useData } from '@/components/providers/DataProvider';
-import TagFilter from './TagFilter';
-import ExportModal from './ExportModal';
-
+} from "@/components/ui/dropdown-menu";
+import { useData } from "@/components/providers/DataProvider";
+import TagFilter from "./TagFilter";
+import ExportModal from "./ExportModal";
 
 const StatusColors = {
   not_started: "bg-gray-100 text-gray-700",
   first_draft: "bg-blue-100 text-blue-700",
   revised_draft: "bg-yellow-100 text-yellow-700",
   final_draft: "bg-green-100 text-green-700",
-  done: "bg-purple-100 text-purple-700"
+  done: "bg-purple-100 text-purple-700",
 };
 
 const LabelColors = {
@@ -60,7 +58,7 @@ const LabelColors = {
   idea: "bg-cyan-100 text-cyan-700",
   research: "bg-amber-100 text-amber-700",
   character: "bg-pink-100 text-pink-700",
-  scene: "bg-indigo-100 text-indigo-700"
+  scene: "bg-indigo-100 text-indigo-700",
 };
 
 const ResizableHandle = ({ onMouseDown }) => (
@@ -76,7 +74,9 @@ const SectionHeader = ({ title, icon, onAdd, onToggleViewMode, viewMode }) => (
   <div className="h-12 px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-slate-50/80">
     <div className="flex items-center gap-2">
       {icon}
-      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{title}</span>
+      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+        {title}
+      </span>
     </div>
     <div className="flex items-center gap-1">
       {onToggleViewMode && (
@@ -86,7 +86,13 @@ const SectionHeader = ({ title, icon, onAdd, onToggleViewMode, viewMode }) => (
           onClick={onToggleViewMode}
           className="h-7 w-7 p-0 hover:bg-slate-200/60"
         >
-          {viewMode === 'editor' ? <LayoutGrid className="h-3.5 w-3.5" /> : (viewMode === 'corkboard' ? <List className="h-3.5 w-3.5" /> : <PenSquare className="h-3.5 w-3.5" />)}
+          {viewMode === "editor" ? (
+            <LayoutGrid className="h-3.5 w-3.5" />
+          ) : viewMode === "corkboard" ? (
+            <List className="h-3.5 w-3.5" />
+          ) : (
+            <PenSquare className="h-3.5 w-3.5" />
+          )}
         </Button>
       )}
       {onAdd && (
@@ -119,33 +125,33 @@ const TreeItem = ({
   onDeleteItem,
   projects,
   currentProject,
-  onEnterTranslationMode
+  onEnterTranslationMode,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [renameValue, setRenameValue] = useState(item.name || item.title);
 
-  const isSelected = type === 'note' && selectedNoteId === item.id;
-  const Icon = type === 'folder' ? Folder : (type === 'note' ? FileText : Book);
+  const isSelected = type === "note" && selectedNoteId === item.id;
+  const Icon = type === "folder" ? Folder : type === "note" ? FileText : Book;
 
   const handleToggle = (e) => {
     e.stopPropagation();
-    if (type === 'folder') {
+    if (type === "folder") {
       setIsExpanded(!isExpanded);
     }
   };
 
   const handleSelect = () => {
-    if (type === 'note') {
+    if (type === "note") {
       onSelectNote(item.id);
-    } else if (type === 'reference') {
-      onViewItem(item.id, 'reference');
+    } else if (type === "reference") {
+      onViewItem(item.id, "reference");
     }
   };
 
   const handleRenameKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       onCommitRename(item.id, renameValue);
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       onCommitRename(item.id, null);
     }
   };
@@ -155,12 +161,14 @@ const TreeItem = ({
       <div
         onClick={handleSelect}
         className={`group flex items-center px-2 py-2 rounded-md cursor-pointer transition-all duration-150 ${
-          isSelected ? 'bg-primary/10 text-primary border-l-2 border-primary' : 'hover:bg-slate-100/70'
-        } ${isDragging ? 'opacity-50' : ''}`}
+          isSelected
+            ? "bg-primary/10 text-primary border-l-2 border-primary"
+            : "hover:bg-slate-100/70"
+        } ${isDragging ? "opacity-50" : ""}`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          {type === 'folder' && (
+          {type === "folder" && (
             <Button
               variant="ghost"
               size="sm"
@@ -176,8 +184,11 @@ const TreeItem = ({
           )}
           <Icon
             className={`h-4 w-4 flex-shrink-0 ${
-              type === 'folder' ? 'text-primary' :
-              (type === 'note' ? 'text-slate-500' : 'text-indigo-600')
+              type === "folder"
+                ? "text-primary"
+                : type === "note"
+                ? "text-slate-500"
+                : "text-indigo-600"
             }`}
           />
           <div className="flex-1 min-w-0">
@@ -196,51 +207,71 @@ const TreeItem = ({
               </span>
             )}
 
-            {type === 'note' && (
+            {type === "note" && (
               <div className="flex gap-1 mt-1 flex-wrap">
                 {!currentProject && item.project_id && (
-                  <Badge variant="outline" className="text-xs py-0 h-4 bg-blue-50 text-blue-700 border-blue-200">
-                    {projects.find(p => p.id === item.project_id)?.title || 'Unknown'}
+                  <Badge
+                    variant="outline"
+                    className="text-xs py-0 h-4 bg-blue-50 text-blue-700 border-blue-200"
+                  >
+                    {projects.find((p) => p.id === item.project_id)?.title ||
+                      "Unknown"}
                   </Badge>
                 )}
                 {item.translation_of_id && (
-                  <Badge variant="outline" className="text-xs py-0 h-4 bg-purple-50 text-purple-700 border-purple-200">
+                  <Badge
+                    variant="outline"
+                    className="text-xs py-0 h-4 bg-purple-50 text-purple-700 border-purple-200"
+                  >
                     <Languages className="h-2.5 w-2.5 mr-0.5" />
                     연결됨
                   </Badge>
                 )}
-                {item.status && item.status !== 'not_started' && (
-                  <Badge className={`text-xs py-0 h-4 ${StatusColors[item.status] || StatusColors['not_started']}`}>
-                    {item.status.replace('_', ' ')}
+                {item.status && item.status !== "not_started" && (
+                  <Badge
+                    className={`text-xs py-0 h-4 ${
+                      StatusColors[item.status] || StatusColors["not_started"]
+                    }`}
+                  >
+                    {item.status.replace("_", " ")}
                   </Badge>
                 )}
-                {item.label && item.label !== 'none' && (
-                  <Badge className={`text-xs py-0 h-4 ${LabelColors[item.label] || ''}`}>
+                {item.label && item.label !== "none" && (
+                  <Badge
+                    className={`text-xs py-0 h-4 ${
+                      LabelColors[item.label] || ""
+                    }`}
+                  >
                     {item.label}
                   </Badge>
                 )}
-                {item.tags && item.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs py-0 h-4 bg-purple-50 text-purple-700 border-purple-200">
-                    #{tag}
-                  </Badge>
-                ))}
+                {item.tags &&
+                  item.tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant="secondary"
+                      className="text-xs py-0 h-4 bg-purple-50 text-purple-700 border-purple-200"
+                    >
+                      #{tag}
+                    </Badge>
+                  ))}
               </div>
             )}
           </div>
         </div>
       </div>
-      {type === 'folder' && isExpanded && <div className="mt-1">{children}</div>}
+      {type === "folder" && isExpanded && (
+        <div className="mt-1">{children}</div>
+      )}
     </div>
   );
 
-  if (type === 'folder' || type === 'note') {
+  if (type === "folder" || type === "note") {
     return (
       <ContextMenu>
-        <ContextMenuTrigger>
-          {treeItemContent}
-        </ContextMenuTrigger>
+        <ContextMenuTrigger>{treeItemContent}</ContextMenuTrigger>
         <ContextMenuContent>
-          {type === 'note' && onEnterTranslationMode && (
+          {type === "note" && onEnterTranslationMode && (
             <>
               <ContextMenuItem onClick={() => onEnterTranslationMode(item.id)}>
                 <Languages className="w-4 h-4 mr-2" />
@@ -259,10 +290,12 @@ const TreeItem = ({
               프로젝트로 이동
             </ContextMenuSubTrigger>
             <ContextMenuSubContent>
-              <ContextMenuItem onClick={() => onMoveToProject(item, type, null)}>
+              <ContextMenuItem
+                onClick={() => onMoveToProject(item, type, null)}
+              >
                 전체 문서로 이동
               </ContextMenuItem>
-              {projects.map(project => (
+              {projects.map((project) => (
                 <ContextMenuItem
                   key={project.id}
                   onClick={() => onMoveToProject(item, type, project.id)}
@@ -285,19 +318,17 @@ const TreeItem = ({
     );
   }
 
-  if (type === 'reference') {
+  if (type === "reference") {
     return (
       <ContextMenu>
-        <ContextMenuTrigger>
-          {treeItemContent}
-        </ContextMenuTrigger>
+        <ContextMenuTrigger>{treeItemContent}</ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem onClick={() => onStartRename(item.id)}>
             이름 바꾸기
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
-            onClick={() => onDeleteItem(item.id, 'reference')}
+            onClick={() => onDeleteItem(item.id, "reference")}
             className="text-red-600 focus:bg-red-100 focus:text-red-600"
           >
             <Trash2 className="w-4 h-4 mr-2" />
@@ -312,35 +343,42 @@ const TreeItem = ({
 };
 
 const NewItemInput = ({ parentId, type, onCommit, onCancel, projectId }) => {
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
 
   const handleKeyDown = async (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       if (name.trim()) {
-        if (type === 'folder') {
-          await FolderEntity.create({ name: name.trim(), parent_id: parentId, project_id: projectId });
+        if (type === "folder") {
+          await FolderEntity.create({
+            name: name.trim(),
+            parent_id: parentId,
+            project_id: projectId,
+          });
           onCommit();
-        } else if (type === 'reference') {
+        } else if (type === "reference") {
           await Reference.create({ title: name.trim(), project_id: projectId });
           onCommit();
         }
       } else {
         onCancel();
       }
-    } else if (e.key === 'Escape') {
+    } else if (e.key === "Escape") {
       onCancel();
     }
   };
 
   return (
-    <div className="px-2 py-2" style={{ paddingLeft: `${(parentId ? 1 : 0) * 16 + 8}px` }}>
+    <div
+      className="px-2 py-2"
+      style={{ paddingLeft: `${(parentId ? 1 : 0) * 16 + 8}px` }}
+    >
       <Input
         autoFocus
         value={name}
         onChange={(e) => setName(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={onCancel}
-        placeholder={type === 'folder' ? '폴더 이름' : '참고문헌 제목'}
+        placeholder={type === "folder" ? "폴더 이름" : "참고문헌 제목"}
         className="h-8 text-sm"
       />
     </div>
@@ -348,31 +386,35 @@ const NewItemInput = ({ parentId, type, onCommit, onCancel, projectId }) => {
 };
 
 const CollapsedProjectSelector = () => {
-    const { projects, currentProject, setCurrentProject } = useData();
+  const { projects, currentProject, setCurrentProject } = useData();
 
-    return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <Folder className="h-4 w-4 text-primary/80" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={() => setCurrentProject(null)}>
-                    모든 문서
-                </DropdownMenuItem>
-                {projects.map(project => (
-                    <DropdownMenuItem
-                        key={project.id}
-                        onClick={() => setCurrentProject(project)}
-                        disabled={currentProject?.id === project.id}
-                    >
-                        {project.title}
-                    </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-        </DropdownMenu>
-    );
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+        >
+          <Folder className="h-4 w-4 text-primary/80" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem onClick={() => setCurrentProject(null)}>
+          모든 문서
+        </DropdownMenuItem>
+        {projects.map((project) => (
+          <DropdownMenuItem
+            key={project.id}
+            onClick={() => setCurrentProject(project)}
+            disabled={currentProject?.id === project.id}
+          >
+            {project.title}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 };
 
 export default function Binder({
@@ -392,7 +434,7 @@ export default function Binder({
   currentProject,
   refetchData,
   projects,
-  onEnterTranslationMode
+  onEnterTranslationMode,
 }) {
   const [newItem, setNewItem] = useState(null);
   const [renamingItemId, setRenamingItemId] = useState(null);
@@ -403,8 +445,8 @@ export default function Binder({
   const handleMouseDown = (e) => {
     e.preventDefault();
     setIsResizing(true);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
   };
 
   const handleMouseMove = (e) => {
@@ -417,27 +459,30 @@ export default function Binder({
 
   const handleMouseUp = () => {
     setIsResizing(false);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
   };
 
-  const allTags = [...new Set(notes.flatMap(note => note.tags || []))].sort();
+  const allTags = [...new Set(notes.flatMap((note) => note.tags || []))].sort();
 
-  const filteredNotes = selectedTags.length > 0
-    ? notes.filter(note => selectedTags.every(tag => (note.tags || []).includes(tag)))
-    : notes;
+  const filteredNotes =
+    selectedTags.length > 0
+      ? notes.filter((note) =>
+          selectedTags.every((tag) => (note.tags || []).includes(tag))
+        )
+      : notes;
 
   const handleCommitNewItem = () => {
     setNewItem(null);
     refetchData();
   };
-  
+
   const handleCommitRename = async (itemId, newName) => {
     if (newName && itemId) {
       try {
-        const isFolder = folders.some(f => f.id === itemId);
-        const isNote = notes.some(n => n.id === itemId);
-        const isReference = references.some(r => r.id === itemId);
+        const isFolder = folders.some((f) => f.id === itemId);
+        const isNote = notes.some((n) => n.id === itemId);
+        const isReference = references.some((r) => r.id === itemId);
 
         if (isFolder) {
           await FolderEntity.update(itemId, { name: newName });
@@ -459,13 +504,17 @@ export default function Binder({
   };
 
   const handleDeleteItem = async (itemId, type) => {
-    if (window.confirm('정말로 이 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+    if (
+      window.confirm(
+        "정말로 이 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+      )
+    ) {
       try {
-        if (type === 'note') {
+        if (type === "note") {
           await Note.delete(itemId);
-        } else if (type === 'folder') {
+        } else if (type === "folder") {
           await FolderEntity.delete(itemId);
-        } else if (type === 'reference') {
+        } else if (type === "reference") {
           await Reference.delete(itemId);
         }
         refetchData();
@@ -477,9 +526,9 @@ export default function Binder({
 
   const handleMoveToProject = async (item, type, projectId) => {
     try {
-      if (type === 'note') {
+      if (type === "note") {
         await Note.update(item.id, { project_id: projectId });
-      } else if (type === 'folder') {
+      } else if (type === "folder") {
         await FolderEntity.update(item.id, { project_id: projectId });
       }
       refetchData();
@@ -493,17 +542,37 @@ export default function Binder({
 
     const { source, destination, draggableId } = result;
 
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
       return;
     }
 
     try {
-      const targetFolderId = destination.droppableId === 'root' ? null : destination.droppableId.replace('folder-', '');
-      
-      await Note.update(draggableId, { folder_id: targetFolderId });
-      refetchData();
+      const targetFolderId =
+        destination.droppableId === "root"
+          ? null
+          : destination.droppableId.replace("folder-", "");
+
+      // 노트인지 폴더인지 참고문헌인지 확인
+      const isNote = notes.some((n) => n.id === draggableId);
+      const isFolder = folders.some((f) => f.id === draggableId);
+      const isReference = references.some((r) => r.id === draggableId);
+
+      if (isNote) {
+        await Note.update(draggableId, { folder_id: targetFolderId });
+      } else if (isFolder) {
+        await FolderEntity.update(draggableId, { parent_id: targetFolderId });
+      } else if (isReference) {
+        await Reference.update(draggableId, { folder_id: targetFolderId });
+      }
+
+      await refetchData();
     } catch (error) {
-        console.error("드래그 앤 드롭 실패:", error);
+      console.error("드래그 앤 드롭 실패:", error);
+      // 에러 발생 시 데이터 새로고침으로 원래 상태로 복구
+      await refetchData();
     }
   };
 
@@ -519,12 +588,15 @@ export default function Binder({
     return (
       <>
         {childFolders.map((folder) => (
-          <Droppable key={`folder-${folder.id}`} droppableId={`folder-${folder.id}`}>
+          <Droppable
+            key={`folder-${folder.id}`}
+            droppableId={`folder-${folder.id}`}
+          >
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={snapshot.isDraggingOver ? 'bg-blue-50 rounded' : ''}
+                className={snapshot.isDraggingOver ? "bg-blue-50 rounded" : ""}
               >
                 <TreeItem
                   item={folder}
@@ -551,7 +623,11 @@ export default function Binder({
         ))}
 
         {childNotes.map((note, index) => (
-          <Draggable key={note.id} draggableId={note.id} index={index}>
+          <Draggable
+            key={note.id}
+            draggableId={note.id}
+            index={index}
+          >
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
@@ -585,7 +661,12 @@ export default function Binder({
   if (collapsed) {
     return (
       <div className="w-12 h-full flex flex-col items-center py-3 gap-3 bg-slate-50 border-r border-slate-200">
-        <Button variant="ghost" size="sm" onClick={() => setCollapsed(false)} className="h-8 w-8 p-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setCollapsed(false)}
+          className="h-8 w-8 p-0"
+        >
           <PanelLeftOpen className="h-4 w-4" />
         </Button>
         <CollapsedProjectSelector />
@@ -600,7 +681,7 @@ export default function Binder({
         style={{ width: `${width}px` }}
       >
         <ResizableHandle onMouseDown={handleMouseDown} />
-        
+
         <div className="h-12 px-4 py-3 border-b border-slate-200 bg-white flex items-center justify-between min-w-0">
           <span className="font-semibold text-slate-800 truncate">바인더</span>
           <div className="flex items-center gap-1">
@@ -613,7 +694,12 @@ export default function Binder({
             >
               <Download className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setCollapsed(true)} className="h-7 w-7 p-0 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCollapsed(true)}
+              className="h-7 w-7 p-0 flex-shrink-0"
+            >
               <PanelLeftClose className="h-4 w-4" />
             </Button>
           </div>
@@ -623,7 +709,9 @@ export default function Binder({
           allTags={allTags}
           selectedTags={selectedTags}
           onTagSelect={(tag) => setSelectedTags([...selectedTags, tag])}
-          onTagDeselect={(tag) => setSelectedTags(selectedTags.filter(t => t !== tag))}
+          onTagDeselect={(tag) =>
+            setSelectedTags(selectedTags.filter((t) => t !== tag))
+          }
           onClearAll={() => setSelectedTags([])}
         />
 
@@ -648,14 +736,14 @@ export default function Binder({
               </div>
             )}
           </Droppable>
-          
+
           <SectionHeader
             title="폴더"
             icon={<Folder className="h-4 w-4 text-primary" />}
-            onAdd={() => setNewItem({ type: 'folder', parentId: null })}
+            onAdd={() => setNewItem({ type: "folder", parentId: null })}
           />
 
-          {newItem && newItem.type === 'folder' && (
+          {newItem && newItem.type === "folder" && (
             <NewItemInput
               parentId={newItem.parentId}
               type="folder"
@@ -668,11 +756,11 @@ export default function Binder({
           <SectionHeader
             title="참고문헌"
             icon={<Book className="h-4 w-4 text-indigo-600" />}
-            onAdd={() => setNewItem({ type: 'reference', parentId: null })}
+            onAdd={() => setNewItem({ type: "reference", parentId: null })}
           />
 
           <div className="py-2">
-            {references.map(reference => (
+            {references.map((reference) => (
               <TreeItem
                 key={reference.id}
                 item={reference}
@@ -693,7 +781,7 @@ export default function Binder({
             ))}
           </div>
 
-          {newItem && newItem.type === 'reference' && (
+          {newItem && newItem.type === "reference" && (
             <NewItemInput
               parentId={newItem.parentId}
               type="reference"

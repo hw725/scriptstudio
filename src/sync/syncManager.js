@@ -209,6 +209,18 @@ class SyncManager {
 
     for (const item of queue) {
       try {
+        // project_settings의 잘못된 project_id 필터링
+        if (item.storeName === "project_settings" && item.data?.project_id) {
+          const uuidRegex =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!uuidRegex.test(item.data.project_id)) {
+            console.warn(`⚠️ 잘못된 UUID 건너뜀: ${item.data.project_id}`);
+            // 큐에서 제거
+            await localDB.removeSyncQueueItem(item.id);
+            continue;
+          }
+        }
+
         let success = false;
 
         // storeName으로 entity 찾기 (notes -> Note, folders -> Folder 등)

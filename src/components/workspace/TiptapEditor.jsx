@@ -17,6 +17,7 @@ import {
   FootnotesSection,
   footnoteHelpers,
 } from "./FootnoteExtension";
+import { MarkdownClipboard } from "./MarkdownClipboard";
 import "./TiptapEditor.css";
 
 // lowlight 인스턴스 생성
@@ -41,6 +42,7 @@ const TiptapEditor = forwardRef(
             levels: [1, 2, 3, 4, 5, 6],
           },
         }),
+        MarkdownClipboard, // 마크다운 복사/붙여넣기 지원
         Link.configure({
           openOnClick: false,
           HTMLAttributes: {

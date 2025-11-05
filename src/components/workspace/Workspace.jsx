@@ -19,8 +19,7 @@ import { LayoutDashboard } from "lucide-react";
 import NewNoteModal from "./NewNoteModal";
 import DailyNotesView from "./DailyNotesView";
 import TranslationEditor from "./TranslationEditor";
-import PomoFlowPanel from "./PomoFlowPanel";
-import { getOfflineMode } from "@/lib/offline-mode";
+// PomoFlowPanel 제거됨 - Edge Function 필요
 
 export default function WorkspacePage() {
   const [selectedNoteId, setSelectedNoteId] = useState(null);
@@ -50,10 +49,7 @@ export default function WorkspacePage() {
 
   const handleSelectNote = useCallback(
     (noteId, _isInitialLoad = false) => {
-      console.log("🎯 handleSelectNote 호출됨:", noteId);
-      console.log("📚 사용 가능한 노트 수:", allNotes.length);
       const targetNote = allNotes.find((n) => n.id === noteId);
-      console.log("🔎 찾은 노트:", targetNote?.title || "없음");
 
       if (targetNote) {
         // 선택된 노트의 프로젝트가 현재 프로젝트와 다르면 프로젝트를 전환
@@ -69,14 +65,11 @@ export default function WorkspacePage() {
             setCurrentProject(null);
           }
         }
-      } else {
-        console.warn("⚠️ 노트를 찾을 수 없음:", noteId);
       }
 
       setViewMode("editor");
       setSelectedReferenceId(null);
       setSelectedNoteId(noteId);
-      console.log("✅ selectedNoteId 설정 완료:", noteId);
       setIsTranslationMode(false); // Reset translation mode when a new note is selected
     },
     [allNotes, projects, currentProject, setCurrentProject]
@@ -86,18 +79,11 @@ export default function WorkspacePage() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const noteIdFromUrl = urlParams.get("noteId");
-    console.log("🔍 Workspace URL 파라미터 확인:", noteIdFromUrl);
 
     if (noteIdFromUrl && allNotes.length > 0) {
-      console.log(
-        "📝 noteId 발견 + 데이터 로드 완료, handleSelectNote 호출:",
-        noteIdFromUrl
-      );
       handleSelectNote(noteIdFromUrl, true);
       // URL에서 파라미터 제거
       window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (noteIdFromUrl && allNotes.length === 0) {
-      console.log("⏳ noteId 있지만 데이터 아직 로딩 중...");
     }
   }, [handleSelectNote, allNotes.length]); // allNotes.length 추가
 
@@ -303,17 +289,7 @@ export default function WorkspacePage() {
           />
         )}
 
-        {/* PomoFlow timer panel (shown in editor view when online) */}
-        {!getOfflineMode() &&
-          viewMode === "editor" &&
-          !isTranslationMode &&
-          selectedNote && (
-            <PomoFlowPanel
-              note={selectedNote}
-              isVisible={true}
-              onToggle={() => {}}
-            />
-          )}
+        {/* PomoFlow timer panel - Edge Function 필요로 제거됨 */}
       </div>
 
       <NewNoteModal

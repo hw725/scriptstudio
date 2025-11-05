@@ -12,7 +12,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useData } from "@/components/providers/DataProvider";
-import PomoFlowPanel from "./PomoFlowPanel";
+// import PomoFlowPanel from "./PomoFlowPanel"; // Edge Function 필요 - 제거됨
 
 const ResizableHandle = ({ onMouseDown }) => (
   <div
@@ -157,13 +157,8 @@ export default function TranslationEditor({
     setLeftPanelWidth(100 - leftPanelWidth);
   };
 
-  // 원문과 번역문 중 하나라도 task_id가 있으면 사용
-  // Source note takes precedence if it has a task_id. Otherwise, translation note. Fallback to sourceNote if neither has one.
-  const linkedNote = sourceNote?.pomoflow_task_id
-    ? sourceNote
-    : translationNote?.pomoflow_task_id
-    ? translationNote
-    : sourceNote;
+  // PomoFlow 관련 코드 제거됨
+  // const linkedNote = sourceNote?.pomoflow_task_id ? sourceNote : translationNote?.pomoflow_task_id ? translationNote : sourceNote;
 
   if (!sourceNote) {
     return (
@@ -396,12 +391,7 @@ export default function TranslationEditor({
         </div>
       </div>
 
-      {/* 번역 모드에서는 하나의 타이머만 표시 (원문/번역문 통합) */}
-      <PomoFlowPanel
-        note={linkedNote}
-        isVisible={true}
-        onToggle={() => {}} // onToggle does nothing as panel is always visible in translation mode
-      />
+      {/* PomoFlow Panel - Edge Function 필요로 제거됨 */}
 
       <style>{`
         /* 번역 모드 전용 스타일 - 패널별로 독립적으로 적용 */
