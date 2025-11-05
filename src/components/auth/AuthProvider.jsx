@@ -14,6 +14,11 @@ export function AuthProvider({ children }) {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
+    // URL fragment 제거 (OAuth 리다이렉트 후 남은 토큰 정리)
+    if (window.location.hash) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+
     // 현재 세션 확인
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -30,6 +35,10 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      // OAuth 리다이렉트 후 세션이 생성되면 모달 닫기
+      if (session) {
+        setShowAuthModal(false);
+      }
     });
 
     return () => subscription.unsubscribe();
