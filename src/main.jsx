@@ -3,8 +3,13 @@ import ReactDOM from "react-dom/client";
 import App from "@/App.jsx";
 import "@/index.css";
 import { initDB } from "@/db/localDB";
-// Expose backup import helper to window (and enable optional hotkey)
-import "@/lib/import-backup.js";
+// Expose backup import helper only in dev to avoid build-time missing file issues on CI
+if (import.meta.env.DEV && typeof window !== "undefined") {
+  // Vite will ignore analyzing this path; dev server can serve /src files
+  import(/* @vite-ignore */ "/src/lib/import-backup.js").catch(() => {
+    // optional helper not available; ignore
+  });
+}
 
 // IndexedDB 초기화
 initDB().catch(console.error);
