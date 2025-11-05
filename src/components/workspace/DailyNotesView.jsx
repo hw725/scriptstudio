@@ -1,18 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { DailyNote } from '@/api/entities';
-import DailyNoteEditor from './DailyNoteEditor';
-import { Calendar, Plus, ArrowLeft, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { format, addDays, subDays, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
+import React, { useState, useEffect } from "react";
+import { DailyNote } from "@/api/entities";
+import DailyNoteEditor from "./DailyNoteEditor";
+import { Calendar, Plus, ArrowLeft, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  format,
+  addDays,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isToday,
+} from "date-fns";
 
 const moodEmojis = {
-  great: '😄',
-  good: '😊',
-  okay: '😐',
-  bad: '😔',
-  terrible: '😢'
+  great: "😄",
+  good: "😊",
+  okay: "😐",
+  bad: "😔",
+  terrible: "😢",
 };
 
 export default function DailyNotesView() {
@@ -24,10 +32,10 @@ export default function DailyNotesView() {
   const loadDailyNotes = async () => {
     setIsLoading(true);
     try {
-      const notes = await DailyNote.list('-date', 30); // 최근 30개
+      const notes = await DailyNote.list("-date", 30); // 최근 30개
       setDailyNotes(notes);
     } catch (error) {
-      console.error('데일리 노트 로드 실패:', error);
+      console.error("데일리 노트 로드 실패:", error);
     } finally {
       setIsLoading(false);
     }
@@ -48,8 +56,8 @@ export default function DailyNotesView() {
   };
 
   const getDailyNoteForDate = (date) => {
-    const dateString = format(date, 'yyyy-MM-dd');
-    return dailyNotes.find(note => note.date === dateString);
+    const dateString = format(date, "yyyy-MM-dd");
+    return dailyNotes.find((note) => note.date === dateString);
   };
 
   if (showEditor) {
@@ -64,7 +72,10 @@ export default function DailyNotesView() {
   // 달력 뷰
   const currentMonth = startOfMonth(selectedDate);
   const monthEnd = endOfMonth(selectedDate);
-  const calendarDays = eachDayOfInterval({ start: currentMonth, end: monthEnd });
+  const calendarDays = eachDayOfInterval({
+    start: currentMonth,
+    end: monthEnd,
+  });
 
   const prevMonth = () => setSelectedDate(subDays(selectedDate, 30));
   const nextMonth = () => setSelectedDate(addDays(selectedDate, 30));
@@ -88,12 +99,20 @@ export default function DailyNotesView() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>{format(selectedDate, 'yyyy년 M월')}</CardTitle>
+                <CardTitle>{format(selectedDate, "yyyy년 M월")}</CardTitle>
                 <div className="flex gap-2">
-                  <Button onClick={prevMonth} variant="outline" size="sm">
+                  <Button
+                    onClick={prevMonth}
+                    variant="outline"
+                    size="sm"
+                  >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
-                  <Button onClick={nextMonth} variant="outline" size="sm">
+                  <Button
+                    onClick={nextMonth}
+                    variant="outline"
+                    size="sm"
+                  >
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -101,32 +120,43 @@ export default function DailyNotesView() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-7 gap-2 mb-4">
-                {['일', '월', '화', '수', '목', '금', '토'].map(day => (
-                  <div key={day} className="p-2 text-center text-sm font-medium text-slate-500">
+                {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+                  <div
+                    key={day}
+                    className="p-2 text-center text-sm font-medium text-slate-500"
+                  >
                     {day}
                   </div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-2">
-                {calendarDays.map(day => {
+                {calendarDays.map((day) => {
                   const note = getDailyNoteForDate(day);
                   const hasNote = !!note;
-                  const todayClass = isToday(day) ? 'ring-2 ring-primary' : '';
-                  
+                  const todayClass = isToday(day) ? "ring-2 ring-primary" : "";
+
                   return (
                     <button
                       key={day.toString()}
                       onClick={() => handleDateSelect(day)}
                       className={`
                         p-2 h-16 border rounded-lg hover:bg-slate-100 transition-colors
-                        ${hasNote ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200'}
+                        ${
+                          hasNote
+                            ? "bg-blue-50 border-blue-200"
+                            : "bg-white border-slate-200"
+                        }
                         ${todayClass}
                       `}
                     >
-                      <div className="text-sm font-medium">{format(day, 'd')}</div>
+                      <div className="text-sm font-medium">
+                        {format(day, "d")}
+                      </div>
                       {hasNote && (
                         <div className="flex items-center justify-center mt-1">
-                          <span className="text-lg">{moodEmojis[note.mood] || '📝'}</span>
+                          <span className="text-lg">
+                            {moodEmojis[note.mood] || "📝"}
+                          </span>
                         </div>
                       )}
                     </button>
@@ -150,7 +180,7 @@ export default function DailyNotesView() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {dailyNotes.slice(0, 10).map(note => (
+                  {dailyNotes.slice(0, 10).map((note) => (
                     <div
                       key={note.id}
                       onClick={() => handleDateSelect(new Date(note.date))}
@@ -158,7 +188,7 @@ export default function DailyNotesView() {
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium">
-                          {format(new Date(note.date), 'M월 d일')}
+                          {format(new Date(note.date), "M월 d일")}
                         </span>
                         <span className="text-lg">{moodEmojis[note.mood]}</span>
                       </div>
@@ -167,8 +197,12 @@ export default function DailyNotesView() {
                       </p>
                       {note.tags && note.tags.length > 0 && (
                         <div className="flex gap-1 mt-2">
-                          {note.tags.slice(0, 3).map(tag => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
+                          {note.tags.slice(0, 3).map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-xs"
+                            >
                               #{tag}
                             </Badge>
                           ))}

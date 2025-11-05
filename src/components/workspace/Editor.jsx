@@ -1,7 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  lazy,
+  Suspense,
+} from "react";
 import { Note } from "@/api/entities";
 import { NoteVersion } from "@/api/entities";
-import TiptapEditor from "./TiptapEditor";
+const TiptapEditor = lazy(() => import("./TiptapEditor"));
 import "./TiptapEditor.css";
 import {
   BookOpen,
@@ -26,16 +33,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import TableOfContentsPanel from "./TableOfContentsPanel";
-import ReferenceInsertModal from "./ReferenceInsertModal";
+const TableOfContentsPanel = lazy(() => import("./TableOfContentsPanel"));
 import EditorProgressBar from "./EditorProgressBar";
-import WritingStats from "./WritingStats";
-import VersionHistoryPanel from "./VersionHistoryPanel";
-import BiDirectionalLinks, { renderLinksInContent } from "./BiDirectionalLinks";
+const VersionHistoryPanel = lazy(() => import("./VersionHistoryPanel"));
+import { renderLinksInContent } from "./BiDirectionalLinks";
+const BiDirectionalLinks = lazy(() => import("./BiDirectionalLinks"));
 import { useData } from "@/components/providers/DataProvider";
 import TagInput from "./TagInput";
-import ExportModal from "./ExportModal";
-import NoteSuggestionPopover from "./NoteSuggestionPopover";
+const ExportModal = lazy(() => import("./ExportModal"));
 
 const getCharCount = (html) => {
   if (!html) return 0;
@@ -107,13 +112,7 @@ export default function Editor({
   isReadMode: externalReadMode,
   onEnterTranslationMode,
 }) {
-  const {
-    allNotes,
-    updateNoteInState,
-    currentProject,
-    projects,
-    setCurrentProject,
-  } = useData();
+  const { allNotes, updateNoteInState, currentProject } = useData();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -125,22 +124,21 @@ export default function Editor({
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [isReadMode, setIsReadMode] = useState(externalReadMode ?? false);
   const [useSerifFont, setUseSerifFont] = useState(false);
-  const [isTranslateMode, setIsTranslateMode] = useState(false);
+  const [, setIsTranslateMode] = useState(false);
 
   const [originalData, setOriginalData] = useState(null);
   const [currentNoteId, setCurrentNoteId] = useState(null);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
+  const [, setLastSaved] = useState(null);
   const [showDataLossWarning, setShowDataLossWarning] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
   const [versions, setVersions] = useState([]);
-  const [showReferenceModal, setShowReferenceModal] = useState(false);
-  const [showWritingStats, setShowWritingStats] = useState(false);
+  const [, setShowReferenceModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [suggestionState, setSuggestionState] = useState({
+  const [, setSuggestionState] = useState({
     isOpen: false,
     targetRect: null,
     query: "",
@@ -149,7 +147,7 @@ export default function Editor({
     selectedIndex: 0,
   });
 
-  const [currentLine, setCurrentLine] = useState(null);
+  // Removed unused currentLine state to reduce overhead
   const [enableZebraStripes, setEnableZebraStripes] = useState(false);
   const [enableLineHighlight, setEnableLineHighlight] = useState(true);
 
@@ -236,19 +234,7 @@ export default function Editor({
     [isReadMode, allNotes, note, closeSuggestionPopover]
   );
 
-  const handleSelectSuggestion = useCallback(
-    (selectedTitle) => {
-      if (!editorRef.current) return;
-
-      const { startPos, query } = suggestionState;
-
-      editorRef.current.deleteText(startPos - 2, query.length + 2);
-      editorRef.current.insertText(`[[${selectedTitle}]]`, startPos - 2);
-      editorRef.current.setSelection(startPos - 2 + selectedTitle.length + 4);
-      closeSuggestionPopover();
-    },
-    [suggestionState, closeSuggestionPopover]
-  );
+  // Removed unused handleSelectSuggestion to reduce warnings
 
   const handleSave = useCallback(
     async (isAutoSave = false) => {
@@ -509,52 +495,9 @@ export default function Editor({
     setLastSaved(new Date());
   };
 
-  const handleAddFootnote = () => {
-    if (editorRef.current) {
-      const editor = editorRef.current.getEditor();
-      if (!editor) return;
+  // Removed unused handleAddFootnote to reduce warnings
 
-      // 기존 각주 ID 찾기
-      const { doc } = editor.state;
-      const ids = [];
-
-      doc.descendants((node) => {
-        if (node.type.name === "footnoteReference") {
-          const id = node.attrs.id;
-          if (id && /^\d+$/.test(id)) {
-            ids.push(parseInt(id));
-          }
-        }
-      });
-
-      // 다음 ID 생성
-      const nextId = ids.length === 0 ? "1" : String(Math.max(...ids) + 1);
-
-      // 각주 참조 삽입
-      editor.chain().focus().insertFootnoteReference(nextId).run();
-
-      // 문서 끝에 각주 정의 추가
-      setTimeout(() => {
-        const endPos = editor.state.doc.content.size;
-        editor
-          .chain()
-          .focus(endPos)
-          .insertContent("\n\n")
-          .insertFootnoteDefinition(nextId, "각주 내용을 입력하세요.")
-          .run();
-      }, 100);
-    }
-  };
-
-  const handleReferenceInsert = (data) => {
-    if (editorRef.current) {
-      const selection = editorRef.current.getSelection();
-      if (selection) {
-        editorRef.current.insertText(data.citationText, selection.index);
-      }
-    }
-    setShowReferenceModal(false);
-  };
+  // Removed unused handleReferenceInsert to reduce warnings
 
   const handleToggleSidePanelMode = () =>
     setSidePanelMode((prev) => (prev === "links" ? "toc" : "links"));
@@ -884,13 +827,23 @@ export default function Editor({
                 )}
               </div>
             ) : (
-              <TiptapEditor
-                ref={editorRef}
-                content={content}
-                onChange={handleEditorChange}
-                placeholder="노트를 작성하세요..."
-                disabled={isReadMode}
-              />
+              <Suspense
+                fallback={
+                  <div className="tiptap-editor border border-gray-300 rounded-lg overflow-hidden">
+                    <div className="p-8 text-center text-gray-500">
+                      에디터 로딩 중...
+                    </div>
+                  </div>
+                }
+              >
+                <TiptapEditor
+                  ref={editorRef}
+                  content={content}
+                  onChange={handleEditorChange}
+                  placeholder="노트를 작성하세요..."
+                  disabled={isReadMode}
+                />
+              </Suspense>
             )}
           </div>
           <EditorProgressBar
@@ -906,40 +859,58 @@ export default function Editor({
 
         {showVersionHistory ? (
           <ResizablePanel initialWidth={450}>
-            <VersionHistoryPanel
-              versions={versions}
-              onRestore={handleRestoreVersion}
-              onClose={() => setShowVersionHistory(false)}
-            />
+            <Suspense
+              fallback={
+                <div className="p-4 text-sm text-slate-500">
+                  버전 히스토리 로딩 중...
+                </div>
+              }
+            >
+              <VersionHistoryPanel
+                versions={versions}
+                onRestore={handleRestoreVersion}
+                onClose={() => setShowVersionHistory(false)}
+              />
+            </Suspense>
           </ResizablePanel>
         ) : (
           isSidePanelOpen && (
             <ResizablePanel initialWidth={350}>
-              {sidePanelMode === "toc" ? (
-                <TableOfContentsPanel
-                  content={content}
-                  editorContainerRef={editorContainerRef}
-                />
-              ) : (
-                <BiDirectionalLinks
-                  currentNote={note}
-                  onNavigateToNote={onNavigateToNote}
-                />
-              )}
+              <Suspense
+                fallback={
+                  <div className="p-4 text-sm text-slate-500">
+                    패널 로딩 중...
+                  </div>
+                }
+              >
+                {sidePanelMode === "toc" ? (
+                  <TableOfContentsPanel
+                    content={content}
+                    editorContainerRef={editorContainerRef}
+                  />
+                ) : (
+                  <BiDirectionalLinks
+                    currentNote={note}
+                    onNavigateToNote={onNavigateToNote}
+                  />
+                )}
+              </Suspense>
             </ResizablePanel>
           )
         )}
       </div>
 
-      <ExportModal
-        isOpen={showExportModal}
-        onClose={() => setShowExportModal(false)}
-        noteId={note?.id}
-        title={title}
-        content={content}
-        footnotes={footnotes}
-        tags={tags}
-      />
+      <Suspense fallback={null}>
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          noteId={note?.id}
+          title={title}
+          content={content}
+          footnotes={footnotes}
+          tags={tags}
+        />
+      </Suspense>
       <style>{`
                 /* Tiptap 에디터 스타일 */
                 .tiptap-editor .ProseMirror { 

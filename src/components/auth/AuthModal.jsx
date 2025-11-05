@@ -14,7 +14,7 @@ import { AlertCircle } from "lucide-react";
 /**
  * Google OAuth 로그인 모달 (간소화 버전)
  */
-export function AuthModal({ isOpen, onClose, onSuccess }) {
+export function AuthModal({ isOpen, onClose, onSuccess: _onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 

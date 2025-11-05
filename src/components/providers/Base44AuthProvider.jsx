@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 
 /**
@@ -10,13 +10,33 @@ export function Base44AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  useEffect(() => {
-    checkAuth();
+  const handleLogin = useCallback(async () => {
+    try {
+      console.log("� 로그인 시도...");
+
+      // Base44 SDK의 로그인 메서드 호출
+      // SDK에 따라 다를 수 있음
+      if (base44.auth.signIn) {
+        await base44.auth.signIn();
+      } else if (base44.auth.login) {
+        await base44.auth.login();
+      } else {
+        // 수동으로 Base44 로그인 페이지로 이동
+        const loginUrl = `https://app.base44.com/login?redirect=${encodeURIComponent(
+          window.location.href
+        )}`;
+        console.log("🌐 로그인 페이지로 이동:", loginUrl);
+        window.location.href = loginUrl;
+      }
+    } catch (error) {
+      console.error("❌ 로그인 실패:", error);
+      setAuthError(error.message);
+    }
   }, []);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
-      console.log("🔐 인증 상태 확인 중...");
+      console.log("� 인증 상태 확인 중...");
 
       // Base44 인증 확인
       const user = await base44.auth.getCurrentUser();
@@ -38,31 +58,11 @@ export function Base44AuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [handleLogin]);
 
-  const handleLogin = async () => {
-    try {
-      console.log("🔑 로그인 시도...");
-
-      // Base44 SDK의 로그인 메서드 호출
-      // SDK에 따라 다를 수 있음
-      if (base44.auth.signIn) {
-        await base44.auth.signIn();
-      } else if (base44.auth.login) {
-        await base44.auth.login();
-      } else {
-        // 수동으로 Base44 로그인 페이지로 이동
-        const loginUrl = `https://app.base44.com/login?redirect=${encodeURIComponent(
-          window.location.href
-        )}`;
-        console.log("🌐 로그인 페이지로 이동:", loginUrl);
-        window.location.href = loginUrl;
-      }
-    } catch (error) {
-      console.error("❌ 로그인 실패:", error);
-      setAuthError(error.message);
-    }
-  };
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   if (isLoading) {
     return (

@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, forwardRef, useState } from "react";
+import { useEffect, useImperativeHandle, forwardRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -22,9 +22,9 @@ const TiptapEditor = forwardRef(
     {
       content = "",
       onChange,
-      onKeyDown,
-      placeholder = "노트를 작성하세요...",
-      disabled = false,
+      onKeyDown: _onKeyDown,
+      placeholder: _placeholder = "노트를 작성하세요...",
+      disabled: _disabled = false,
     },
     ref
   ) => {
@@ -291,7 +291,7 @@ const TiptapEditor = forwardRef(
             }`}
             title="Blockquote"
           >
-            " Quote
+            &quot; Quote
           </button>
 
           <div className="w-px h-6 bg-gray-300 mx-1" />

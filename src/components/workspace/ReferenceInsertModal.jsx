@@ -1,19 +1,24 @@
-
-import React, { useState, useEffect } from 'react';
-import { useData } from '@/components/providers/DataProvider';
-import { syncRefManager } from '@/api/functions';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React, { useState } from "react";
+import { useData } from "@/components/providers/DataProvider";
+import { syncRefManager } from "@/api/functions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Search,
   BookOpen,
@@ -21,32 +26,36 @@ import {
   Copy,
   ArrowRight,
   Loader2,
-  CheckCircle2
-} from 'lucide-react';
+  CheckCircle2,
+} from "lucide-react";
 
 const CitationFormats = {
   apa: {
     name: "APA 스타일",
-    format: (ref) => `${ref.authors} (${ref.year}). ${ref.title}. ${ref.publication}.`
+    format: (ref) =>
+      `${ref.authors} (${ref.year}). ${ref.title}. ${ref.publication}.`,
   },
   mla: {
     name: "MLA 스타일",
-    format: (ref) => `${ref.authors}. 「${ref.title}」 『${ref.publication}』, ${ref.year}.`
+    format: (ref) =>
+      `${ref.authors}. 「${ref.title}」 『${ref.publication}』, ${ref.year}.`,
   },
   chicago: {
     name: "Chicago 스타일",
-    format: (ref) => `${ref.authors}, 「${ref.title},」 ${ref.publication} (${ref.year}).`
+    format: (ref) =>
+      `${ref.authors}, 「${ref.title},」 ${ref.publication} (${ref.year}).`,
   },
   korean: {
     name: "한국어 논문 스타일",
-    format: (ref) => `${ref.authors}, 「${ref.title}」, 『${ref.publication}』, ${ref.year}.`
-  }
+    format: (ref) =>
+      `${ref.authors}, 「${ref.title}」, 『${ref.publication}』, ${ref.year}.`,
+  },
 };
 
 export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
   const { references, refetchData } = useData();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFormat, setSelectedFormat] = useState('korean');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFormat, setSelectedFormat] = useState("korean");
   const [selectedRefs, setSelectedRefs] = useState([]);
 
   // RefManager 관련 상태
@@ -56,17 +65,19 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
   const [selectedRefManagerIds, setSelectedRefManagerIds] = useState([]);
   const [isImporting, setIsImporting] = useState(false);
 
-  const filteredReferences = references.filter(ref =>
-    ref.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (ref.authors && ref.authors.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredReferences = references.filter(
+    (ref) =>
+      ref.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ref.authors &&
+        ref.authors.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleInsertSelected = () => {
     if (selectedRefs.length === 0) return;
 
     const format = CitationFormats[selectedFormat];
-    const citations = selectedRefs.map(ref => format.format(ref));
-    const citationText = citations.join(' ');
+    const citations = selectedRefs.map((ref) => format.format(ref));
+    const citationText = citations.join(" ");
 
     onInsert({ citationText, references: selectedRefs });
     onClose();
@@ -77,21 +88,21 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
     if (selectedRefs.length === 0) return;
 
     const format = CitationFormats[selectedFormat];
-    const citations = selectedRefs.map(ref => format.format(ref));
-    const citationText = citations.join('\n');
+    const citations = selectedRefs.map((ref) => format.format(ref));
+    const citationText = citations.join("\n");
 
     try {
       await navigator.clipboard.writeText(citationText);
     } catch (err) {
-      console.error('클립보드 복사 실패:', err);
+      console.error("클립보드 복사 실패:", err);
     }
   };
 
   const toggleReferenceSelection = (ref) => {
-    setSelectedRefs(prev => {
-      const isSelected = prev.some(r => r.id === ref.id);
+    setSelectedRefs((prev) => {
+      const isSelected = prev.some((r) => r.id === ref.id);
       if (isSelected) {
-        return prev.filter(r => r.id !== ref.id);
+        return prev.filter((r) => r.id !== ref.id);
       } else {
         return [...prev, ref];
       }
@@ -103,14 +114,16 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
     setIsLoadingRefManager(true);
     setRefManagerError(null);
     try {
-      const response = await syncRefManager({ action: 'listReferences' });
+      const response = await syncRefManager({ action: "listReferences" });
       if (response.data.success) {
         setRefManagerRefs(response.data.items);
       } else {
-        setRefManagerError(response.data.error || 'RefManager 목록을 불러오는데 실패했습니다.');
+        setRefManagerError(
+          response.data.error || "RefManager 목록을 불러오는데 실패했습니다."
+        );
       }
     } catch (error) {
-      setRefManagerError('RefManager 연결에 실패했습니다: ' + error.message);
+      setRefManagerError("RefManager 연결에 실패했습니다: " + error.message);
     } finally {
       setIsLoadingRefManager(false);
     }
@@ -123,8 +136,8 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
     setRefManagerError(null);
     try {
       const response = await syncRefManager({
-        action: 'importSelectedReferences',
-        data: { ids: selectedRefManagerIds }
+        action: "importSelectedReferences",
+        data: { ids: selectedRefManagerIds },
       });
 
       if (response.data.success) {
@@ -132,28 +145,33 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
         // 성공 시 데이터 새로고침
         await refetchData();
         // 성공 메시지 표시 (선택사항)
-        alert(`${response.data.imported}개의 참고문헌을 성공적으로 가져왔습니다.`);
+        alert(
+          `${response.data.imported}개의 참고문헌을 성공적으로 가져왔습니다.`
+        );
       } else {
-        setRefManagerError(response.data.error || '가져오기에 실패했습니다.');
+        setRefManagerError(response.data.error || "가져오기에 실패했습니다.");
       }
     } catch (error) {
-      console.error('RefManager 가져오기 오류:', error);
-      setRefManagerError('가져오기에 실패했습니다: ' + error.message);
+      console.error("RefManager 가져오기 오류:", error);
+      setRefManagerError("가져오기에 실패했습니다: " + error.message);
     } finally {
       setIsImporting(false);
     }
   };
 
   const toggleRefManagerSelection = (refId) => {
-    setSelectedRefManagerIds(prev =>
+    setSelectedRefManagerIds((prev) =>
       prev.includes(refId)
-        ? prev.filter(id => id !== refId)
+        ? prev.filter((id) => id !== refId)
         : [...prev, refId]
     );
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={onClose}
+    >
       <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0">
         <DialogHeader className="px-6 py-4 border-b border-slate-200 shrink-0">
           <DialogTitle className="flex items-center gap-2">
@@ -162,13 +180,19 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="local" className="flex-1 flex flex-col min-h-0">
+        <Tabs
+          defaultValue="local"
+          className="flex-1 flex flex-col min-h-0"
+        >
           <TabsList className="grid w-full grid-cols-2 mx-6 mt-4 mb-0 shrink-0">
             <TabsTrigger value="local">내 참고문헌</TabsTrigger>
             <TabsTrigger value="refmanager">RefManager 동기화</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="local" className="flex-1 min-h-0">
+          <TabsContent
+            value="local"
+            className="flex-1 min-h-0"
+          >
             <div className="flex flex-col h-full p-6 space-y-4">
               <div className="flex gap-4 shrink-0">
                 <div className="flex-1">
@@ -179,13 +203,21 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
                     className="w-full"
                   />
                 </div>
-                <Select value={selectedFormat} onValueChange={setSelectedFormat}>
+                <Select
+                  value={selectedFormat}
+                  onValueChange={setSelectedFormat}
+                >
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(CitationFormats).map(([key, format]) => (
-                      <SelectItem key={key} value={key}>{format.name}</SelectItem>
+                      <SelectItem
+                        key={key}
+                        value={key}
+                      >
+                        {format.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -199,15 +231,20 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
                       <p>검색 결과가 없습니다</p>
                     </div>
                   ) : (
-                    filteredReferences.map(ref => {
-                      const isSelected = selectedRefs.some(r => r.id === ref.id);
-                      const previewText = CitationFormats[selectedFormat].format(ref);
+                    filteredReferences.map((ref) => {
+                      const isSelected = selectedRefs.some(
+                        (r) => r.id === ref.id
+                      );
+                      const previewText =
+                        CitationFormats[selectedFormat].format(ref);
 
                       return (
                         <Card
                           key={ref.id}
                           className={`cursor-pointer transition-all border hover:shadow-sm ${
-                            isSelected ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300 bg-white'
+                            isSelected
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-slate-200 hover:border-slate-300 bg-white"
                           }`}
                           onClick={() => toggleReferenceSelection(ref)}
                         >
@@ -219,12 +256,18 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
                                 </h4>
                                 <div className="flex items-center gap-2 mb-2">
                                   {ref.authors && (
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {ref.authors}
                                     </Badge>
                                   )}
                                   {ref.year && (
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {ref.year}
                                     </Badge>
                                   )}
@@ -272,11 +315,15 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
             </div>
           </TabsContent>
 
-          <TabsContent value="refmanager" className="flex-1 min-h-0">
+          <TabsContent
+            value="refmanager"
+            className="flex-1 min-h-0"
+          >
             <div className="flex flex-col h-full p-6 space-y-4">
               <div className="flex justify-between items-center shrink-0">
                 <p className="text-sm text-slate-600">
-                  RefManager에서 참고문헌을 가져와 내 라이브러리에 추가할 수 있습니다.
+                  RefManager에서 참고문헌을 가져와 내 라이브러리에 추가할 수
+                  있습니다.
                 </p>
                 <Button
                   onClick={loadRefManagerReferences}
@@ -312,14 +359,16 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
                       <p>RefManager에서 참고문헌을 불러오세요</p>
                     </div>
                   ) : (
-                    refManagerRefs.map(ref => {
+                    refManagerRefs.map((ref) => {
                       const isSelected = selectedRefManagerIds.includes(ref.id);
 
                       return (
                         <Card
                           key={ref.id}
                           className={`cursor-pointer transition-all border hover:shadow-sm ${
-                            isSelected ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300 bg-white'
+                            isSelected
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-slate-200 hover:border-slate-300 bg-white"
                           }`}
                           onClick={() => toggleRefManagerSelection(ref.id)}
                         >
@@ -331,12 +380,18 @@ export default function ReferenceInsertModal({ isOpen, onClose, onInsert }) {
                                 </h4>
                                 <div className="flex items-center gap-2">
                                   {ref.authors && (
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {ref.authors}
                                     </Badge>
                                   )}
                                   {ref.year && (
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {ref.year}
                                     </Badge>
                                   )}

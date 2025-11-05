@@ -1,11 +1,23 @@
+/* global process */
 import { createClient } from "@supabase/supabase-js";
 
-// Handle both Vite (import.meta.env) and Node.js (process.env) environments
+// Handle both Vite (import.meta.env) and Node.js (process.env) environments safely
 const getEnvVar = (key, defaultValue) => {
-  if (typeof import.meta !== "undefined" && import.meta.env) {
-    return import.meta.env[key] || defaultValue;
+  if (
+    typeof import.meta !== "undefined" &&
+    import.meta.env &&
+    import.meta.env[key] !== undefined
+  ) {
+    return import.meta.env[key];
   }
-  return process.env[key] || defaultValue;
+  if (
+    typeof process !== "undefined" &&
+    process.env &&
+    process.env[key] !== undefined
+  ) {
+    return process.env[key];
+  }
+  return defaultValue;
 };
 
 const supabaseUrl = getEnvVar("VITE_SUPABASE_URL", "http://127.0.0.1:54321");

@@ -1,12 +1,18 @@
-
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Note } from '@/api/entities';
-import Editor from './Editor';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { GripVertical, ArrowLeftRight, FileText, Languages, PenSquare, Eye } from 'lucide-react';
-import { useData } from '@/components/providers/DataProvider';
-import PomoFlowPanel from './PomoFlowPanel';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { Note } from "@/api/entities";
+import Editor from "./Editor";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  GripVertical,
+  ArrowLeftRight,
+  FileText,
+  Languages,
+  PenSquare,
+  Eye,
+} from "lucide-react";
+import { useData } from "@/components/providers/DataProvider";
+import PomoFlowPanel from "./PomoFlowPanel";
 
 const ResizableHandle = ({ onMouseDown }) => (
   <div
@@ -17,26 +23,30 @@ const ResizableHandle = ({ onMouseDown }) => (
   </div>
 );
 
-export default function TranslationEditor({ 
-  sourceNoteId, 
+export default function TranslationEditor({
+  sourceNoteId,
   onNavigateToNote,
-  onExitTranslationMode 
+  onExitTranslationMode,
 }) {
   const { allNotes, refetchData } = useData();
   const [sourceNote, setSourceNote] = useState(null);
   const [translationNote, setTranslationNote] = useState(null);
-  const [activePanel, setActivePanel] = useState('translation'); // 'source' or 'translation'
+  const [activePanel, setActivePanel] = useState("translation"); // 'source' or 'translation'
   const [leftPanelWidth, setLeftPanelWidth] = useState(50); // percentage
   const [isResizing, setIsResizing] = useState(false);
   const [isCreatingTranslation, setIsCreatingTranslation] = useState(false);
   const [sourceReadMode, setSourceReadMode] = useState(true);
-  
+
   // New states for line features
-  const [sourceEnableLineHighlight, setSourceEnableLineHighlight] = useState(true);
-  const [sourceEnableZebraStripes, setSourceEnableZebraStripes] = useState(false);
-  const [translationEnableLineHighlight, setTranslationEnableLineHighlight] = useState(true);
-  const [translationEnableZebraStripes, setTranslationEnableZebraStripes] = useState(false);
-  
+  const [sourceEnableLineHighlight, setSourceEnableLineHighlight] =
+    useState(true);
+  const [sourceEnableZebraStripes, setSourceEnableZebraStripes] =
+    useState(false);
+  const [translationEnableLineHighlight, setTranslationEnableLineHighlight] =
+    useState(true);
+  const [translationEnableZebraStripes, setTranslationEnableZebraStripes] =
+    useState(false);
+
   const activePanelDebounceTimer = useRef(null);
   const containerRef = useRef(null);
 
@@ -45,20 +55,24 @@ export default function TranslationEditor({
     const loadNotes = async () => {
       if (!sourceNoteId) return;
 
-      const source = allNotes.find(n => n.id === sourceNoteId);
+      const source = allNotes.find((n) => n.id === sourceNoteId);
       if (!source) return;
 
       setSourceNote(source);
 
       // translation_of_id로 연결된 번역 노트 찾기
       if (source.translation_of_id) {
-        const translation = allNotes.find(n => n.id === source.translation_of_id);
+        const translation = allNotes.find(
+          (n) => n.id === source.translation_of_id
+        );
         if (translation) {
           setTranslationNote(translation);
         }
       } else {
         // 역방향으로도 확인 (이 노트를 원본으로 가지는 번역 노트)
-        const translation = allNotes.find(n => n.translation_of_id === sourceNoteId);
+        const translation = allNotes.find(
+          (n) => n.translation_of_id === sourceNoteId
+        );
         if (translation) {
           setTranslationNote(translation);
         }
@@ -76,23 +90,23 @@ export default function TranslationEditor({
     try {
       const newTranslation = await Note.create({
         title: `${sourceNote.title} (번역)`,
-        content: '',
+        content: "",
         project_id: sourceNote.project_id,
         folder_id: sourceNote.folder_id,
         translation_of_id: sourceNote.id,
-        pomoflow_task_id: sourceNote.pomoflow_task_id || null // 원문의 task_id 복사
+        pomoflow_task_id: sourceNote.pomoflow_task_id || null, // 원문의 task_id 복사
       });
 
       // 원본 노트에도 번역 노트 ID 연결
       await Note.update(sourceNote.id, {
-        translation_of_id: newTranslation.id
+        translation_of_id: newTranslation.id,
       });
 
       await refetchData();
       setTranslationNote(newTranslation);
     } catch (error) {
-      console.error('번역 노트 생성 실패:', error);
-      alert('번역 노트를 생성하는 데 실패했습니다.');
+      console.error("번역 노트 생성 실패:", error);
+      alert("번역 노트를 생성하는 데 실패했습니다.");
     } finally {
       setIsCreatingTranslation(false);
     }
@@ -113,25 +127,29 @@ export default function TranslationEditor({
   const handleMouseDown = (e) => {
     e.preventDefault();
     setIsResizing(true);
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
   };
 
-  const handleMouseMove = useCallback((e) => {
-    if (!isResizing || !containerRef.current) return;
-    
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-    
-    if (newWidth > 20 && newWidth < 80) {
-      setLeftPanelWidth(newWidth);
-    }
-  }, [isResizing]);
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!isResizing || !containerRef.current) return;
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const newWidth =
+        ((e.clientX - containerRect.left) / containerRect.width) * 100;
+
+      if (newWidth > 20 && newWidth < 80) {
+        setLeftPanelWidth(newWidth);
+      }
+    },
+    [isResizing]
+  );
 
   const handleMouseUp = () => {
     setIsResizing(false);
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
   };
 
   // 패널 교체
@@ -141,7 +159,11 @@ export default function TranslationEditor({
 
   // 원문과 번역문 중 하나라도 task_id가 있으면 사용
   // Source note takes precedence if it has a task_id. Otherwise, translation note. Fallback to sourceNote if neither has one.
-  const linkedNote = sourceNote?.pomoflow_task_id ? sourceNote : (translationNote?.pomoflow_task_id ? translationNote : sourceNote);
+  const linkedNote = sourceNote?.pomoflow_task_id
+    ? sourceNote
+    : translationNote?.pomoflow_task_id
+    ? translationNote
+    : sourceNote;
 
   if (!sourceNote) {
     return (
@@ -152,13 +174,19 @@ export default function TranslationEditor({
   }
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col relative bg-slate-100">
+    <div
+      ref={containerRef}
+      className="h-full flex flex-col relative bg-slate-100"
+    >
       {/* 번역 모드 헤더 - 종료 버튼 포함 */}
       <div className="h-12 px-4 py-3 border-b border-slate-200 bg-white flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <Languages className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-semibold text-slate-800">번역 모드</h2>
-          <Badge variant="outline" className="text-xs">
+          <Badge
+            variant="outline"
+            className="text-xs"
+          >
             원문 ↔ 번역문
           </Badge>
         </div>
@@ -186,13 +214,13 @@ export default function TranslationEditor({
       {/* 원문/번역문 패널 영역 */}
       <div className="flex-1 flex relative min-h-0">
         {/* 왼쪽 패널 */}
-        <div 
+        <div
           style={{ width: `${leftPanelWidth}%` }}
-          onClick={() => handlePanelClick('source')}
+          onClick={() => handlePanelClick("source")}
           className={`relative flex flex-col h-full transition-opacity ${
-            activePanel === 'source' 
-              ? 'ring-2 ring-inset ring-primary/30' 
-              : 'opacity-90'
+            activePanel === "source"
+              ? "ring-2 ring-inset ring-primary/30"
+              : "opacity-90"
           }`}
         >
           {/* 패널 헤더 */}
@@ -200,8 +228,10 @@ export default function TranslationEditor({
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-slate-500" />
               <span className="text-sm font-medium text-slate-700">원문</span>
-              {activePanel === 'source' && (
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">활성</span>
+              {activePanel === "source" && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                  활성
+                </span>
               )}
             </div>
             <div className="flex items-center gap-1">
@@ -214,10 +244,14 @@ export default function TranslationEditor({
                 }}
                 className="h-7 gap-1 text-xs"
               >
-                {sourceReadMode ? <Eye className="h-3 w-3" /> : <PenSquare className="h-3 w-3" />}
-                {sourceReadMode ? '읽기' : '편집'}
+                {sourceReadMode ? (
+                  <Eye className="h-3 w-3" />
+                ) : (
+                  <PenSquare className="h-3 w-3" />
+                )}
+                {sourceReadMode ? "읽기" : "편집"}
               </Button>
-              
+
               {/* 원문 읽기 편의 옵션 (편집 모드에서만) */}
               {!sourceReadMode && (
                 <>
@@ -267,13 +301,13 @@ export default function TranslationEditor({
         <ResizableHandle onMouseDown={handleMouseDown} />
 
         {/* 오른쪽 패널 */}
-        <div 
+        <div
           style={{ width: `${100 - leftPanelWidth}%` }}
-          onClick={() => handlePanelClick('translation')}
+          onClick={() => handlePanelClick("translation")}
           className={`relative flex flex-col h-full transition-opacity ${
-            activePanel === 'translation' 
-              ? 'ring-2 ring-inset ring-primary/30' 
-              : 'opacity-90'
+            activePanel === "translation"
+              ? "ring-2 ring-inset ring-primary/30"
+              : "opacity-90"
           }`}
         >
           {/* 패널 헤더 */}
@@ -281,20 +315,26 @@ export default function TranslationEditor({
             <div className="flex items-center gap-2">
               <Languages className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium text-slate-700">번역</span>
-              {activePanel === 'translation' && (
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">활성</span>
+              {activePanel === "translation" && (
+                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                  활성
+                </span>
               )}
             </div>
-            
+
             {/* 번역문 읽기 편의 옵션 */}
             {translationNote && (
               <div className="flex items-center gap-1">
                 <Button
-                  variant={translationEnableLineHighlight ? "secondary" : "ghost"}
+                  variant={
+                    translationEnableLineHighlight ? "secondary" : "ghost"
+                  }
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setTranslationEnableLineHighlight(!translationEnableLineHighlight);
+                    setTranslationEnableLineHighlight(
+                      !translationEnableLineHighlight
+                    );
                   }}
                   className="h-6 w-6 p-0"
                   title="현재 줄 강조"
@@ -302,11 +342,15 @@ export default function TranslationEditor({
                   <span className="text-xs">줄</span>
                 </Button>
                 <Button
-                  variant={translationEnableZebraStripes ? "secondary" : "ghost"}
+                  variant={
+                    translationEnableZebraStripes ? "secondary" : "ghost"
+                  }
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setTranslationEnableZebraStripes(!translationEnableZebraStripes);
+                    setTranslationEnableZebraStripes(
+                      !translationEnableZebraStripes
+                    );
                   }}
                   className="h-6 w-6 p-0"
                   title="교차 배경색"
@@ -335,29 +379,30 @@ export default function TranslationEditor({
                   번역 노트가 없습니다
                 </h3>
                 <p className="text-slate-500 text-center mb-6 max-w-md">
-                  이 원문 노트에 연결된 번역 노트를 생성하여 원문과 번역문을 나란히 보면서 작업할 수 있습니다.
+                  이 원문 노트에 연결된 번역 노트를 생성하여 원문과 번역문을
+                  나란히 보면서 작업할 수 있습니다.
                 </p>
-                <Button 
+                <Button
                   onClick={handleCreateTranslation}
                   disabled={isCreatingTranslation}
                   className="gap-2"
                 >
                   <Languages className="h-4 w-4" />
-                  {isCreatingTranslation ? '생성 중...' : '번역 노트 생성'}
+                  {isCreatingTranslation ? "생성 중..." : "번역 노트 생성"}
                 </Button>
               </div>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* 번역 모드에서는 하나의 타이머만 표시 (원문/번역문 통합) */}
-      <PomoFlowPanel 
-        note={linkedNote} 
-        isVisible={true} 
+      <PomoFlowPanel
+        note={linkedNote}
+        isVisible={true}
         onToggle={() => {}} // onToggle does nothing as panel is always visible in translation mode
       />
-      
+
       <style>{`
         /* 번역 모드 전용 스타일 - 패널별로 독립적으로 적용 */
         .translation-source-panel .ql-editor > .current-line,
@@ -392,7 +437,14 @@ export default function TranslationEditor({
 }
 
 // 줄 강조 기능이 있는 Editor 래퍼 컴포넌트
-function EditorWithLineFeatures({ note, onNavigateToNote, isReadMode, enableLineHighlight, enableZebraStripes, panelId }) {
+function EditorWithLineFeatures({
+  note,
+  onNavigateToNote,
+  isReadMode,
+  enableLineHighlight,
+  enableZebraStripes,
+  panelId: _panelId,
+}) {
   const quillRef = useRef(null);
 
   // Current line highlight logic
@@ -402,8 +454,8 @@ function EditorWithLineFeatures({ note, onNavigateToNote, isReadMode, enableLine
       if (quillRef.current) {
         const editorRoot = quillRef.current.getEditor()?.root;
         if (editorRoot) {
-          const allLines = editorRoot.querySelectorAll('.ql-editor > *');
-          allLines.forEach(el => el.classList.remove('current-line'));
+          const allLines = editorRoot.querySelectorAll(".ql-editor > *");
+          allLines.forEach((el) => el.classList.remove("current-line"));
         }
       }
       return;
@@ -415,30 +467,31 @@ function EditorWithLineFeatures({ note, onNavigateToNote, isReadMode, enableLine
     const updateCurrentLine = () => {
       const selection = quill.getSelection();
       const editorRoot = quill.root;
-      
-      // Always remove 'current-line' from all elements first to prevent multiple highlights
-      const allLines = editorRoot.querySelectorAll('.ql-editor > *');
-      allLines.forEach(el => el.classList.remove('current-line'));
 
-      if (enableLineHighlight && selection && selection.length === 0) { // Only highlight if no text is selected (cursor only)
+      // Always remove 'current-line' from all elements first to prevent multiple highlights
+      const allLines = editorRoot.querySelectorAll(".ql-editor > *");
+      allLines.forEach((el) => el.classList.remove("current-line"));
+
+      if (enableLineHighlight && selection && selection.length === 0) {
+        // Only highlight if no text is selected (cursor only)
         const [line] = quill.getLine(selection.index);
         if (line && line.domNode) {
-          line.domNode.classList.add('current-line');
+          line.domNode.classList.add("current-line");
         }
       }
     };
 
     // Listen for selection changes to update the highlighted line
-    quill.on('selection-change', updateCurrentLine);
+    quill.on("selection-change", updateCurrentLine);
     updateCurrentLine(); // Call once initially to set the state based on initial cursor position
 
     return () => {
-      quill.off('selection-change', updateCurrentLine);
+      quill.off("selection-change", updateCurrentLine);
       // Clean up classes when component unmounts or dependencies change
       const editorRoot = quill.root;
       if (editorRoot) {
-        const allLines = editorRoot.querySelectorAll('.ql-editor > *');
-        allLines.forEach(el => el.classList.remove('current-line'));
+        const allLines = editorRoot.querySelectorAll(".ql-editor > *");
+        allLines.forEach((el) => el.classList.remove("current-line"));
       }
     };
   }, [isReadMode, enableLineHighlight, note.content]); // Re-run if note content changes, as DOM structure might change
@@ -450,8 +503,10 @@ function EditorWithLineFeatures({ note, onNavigateToNote, isReadMode, enableLine
       if (quillRef.current) {
         const editorRoot = quillRef.current.getEditor()?.root;
         if (editorRoot) {
-          const allLines = editorRoot.querySelectorAll('.ql-editor > *');
-          allLines.forEach(el => el.classList.remove('zebra-even', 'zebra-odd'));
+          const allLines = editorRoot.querySelectorAll(".ql-editor > *");
+          allLines.forEach((el) =>
+            el.classList.remove("zebra-even", "zebra-odd")
+          );
         }
       }
       return;
@@ -461,21 +516,23 @@ function EditorWithLineFeatures({ note, onNavigateToNote, isReadMode, enableLine
     if (!quill) return;
 
     const editorRoot = quill.root;
-    const allLines = editorRoot.querySelectorAll('.ql-editor > *');
-    
+    const allLines = editorRoot.querySelectorAll(".ql-editor > *");
+
     allLines.forEach((el, index) => {
       if (enableZebraStripes) {
-        el.classList.toggle('zebra-even', index % 2 === 0);
-        el.classList.toggle('zebra-odd', index % 2 === 1);
+        el.classList.toggle("zebra-even", index % 2 === 0);
+        el.classList.toggle("zebra-odd", index % 2 === 1);
       } else {
-        el.classList.remove('zebra-even', 'zebra-odd');
+        el.classList.remove("zebra-even", "zebra-odd");
       }
     });
 
     // Cleanup: remove classes if enableZebraStripes becomes false or component unmounts
     return () => {
       if (editorRoot) {
-        allLines.forEach(el => el.classList.remove('zebra-even', 'zebra-odd'));
+        allLines.forEach((el) =>
+          el.classList.remove("zebra-even", "zebra-odd")
+        );
       }
     };
   }, [note.content, enableZebraStripes, isReadMode]); // Re-run if note content changes or feature is toggled

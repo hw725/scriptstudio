@@ -7,7 +7,7 @@ import { AuthModal } from "@/components/auth/AuthModal";
  * Google OAuth 로그인 처리
  */
 export function SupabaseAuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 

@@ -47,7 +47,7 @@ export default function WorkspacePage() {
   } = useData();
 
   const handleSelectNote = useCallback(
-    (noteId, isInitialLoad = false) => {
+    (noteId, _isInitialLoad = false) => {
       const targetNote = allNotes.find((n) => n.id === noteId);
 
       if (targetNote) {

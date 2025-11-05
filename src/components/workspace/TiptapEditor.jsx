@@ -27,9 +27,9 @@ const TiptapEditor = forwardRef(
     {
       content = "",
       onChange,
-      onKeyDown,
-      placeholder = "노트를 작성하세요...",
-      disabled = false,
+      onKeyDown: _onKeyDown,
+      placeholder: _placeholder = "노트를 작성하세요...",
+      disabled: _disabled = false,
     },
     ref
   ) => {
