@@ -34,3 +34,4 @@ export*.json
 # Supabase temp files
 supabase/.temp/
 supabase/functions/.temp/
+.vercel

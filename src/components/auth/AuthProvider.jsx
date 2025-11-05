@@ -28,8 +28,15 @@ export function AuthProvider({ children }) {
     // 인증 상태 변경 감지
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      // 로그인 성공 시 모달 닫기, 로그아웃 시 모달 열기
+      if (event === "SIGNED_IN") {
+        setShowAuthModal(false);
+      }
+      if (event === "SIGNED_OUT") {
+        setShowAuthModal(true);
+      }
     });
 
     return () => subscription.unsubscribe();
