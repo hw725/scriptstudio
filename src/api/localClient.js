@@ -126,15 +126,7 @@ class ProjectEntity extends LocalEntity {
         await localDB.delete("folders", folder.id);
       }
 
-      // 3. 프로젝트에 속한 참고문헌 삭제 (CASCADE)
-      const references = await localDB.getAllByIndex(
-        "references",
-        "project_id",
-        id
-      );
-      for (const ref of references) {
-        await localDB.delete("references", ref.id);
-      }
+      // 참고문헌 기능 제거됨
 
       // 4. 프로젝트 설정 삭제 (CASCADE)
       const allSettings = await localDB.getAll("project_settings");
@@ -196,7 +188,6 @@ export const localClient = {
   entities: {
     Note: new LocalEntity("notes"),
     Folder: new FolderEntity(), // CASCADE 삭제 지원
-    Reference: new LocalEntity("references"),
     Project: new ProjectEntity(), // CASCADE 삭제 지원
     Template: new LocalEntity("templates"),
     ProjectSettings: new LocalEntity("project_settings"),
@@ -221,13 +212,6 @@ export const localClient = {
       return {
         success: true,
         message: "로컬 모드에서는 OCR이 지원되지 않습니다",
-      };
-    },
-    syncPomoFlow: async () => {
-      console.log("⏱️ 로컬 모드 - syncPomoFlow (실제 동작 없음)");
-      return {
-        success: true,
-        message: "로컬 모드에서는 PomoFlow가 지원되지 않습니다",
       };
     },
     exportData: async () => {

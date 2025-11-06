@@ -9,7 +9,6 @@ import {
 import Corkboard from "@/components/workspace/Corkboard";
 import ProgressTracker from "@/components/workspace/ProgressTracker";
 import ProjectSelector from "@/components/workspace/ProjectSelector";
-import ReferenceViewer from "@/components/workspace/ReferenceViewer";
 import OutlineView from "@/components/workspace/OutlineView";
 import SyncStatusBadge from "@/components/workspace/SyncStatusBadge";
 import { Link } from "react-router-dom";
@@ -19,11 +18,9 @@ import { LayoutDashboard } from "lucide-react";
 import NewNoteModal from "./NewNoteModal";
 import DailyNotesView from "./DailyNotesView";
 import TranslationEditor from "./TranslationEditor";
-// PomoFlowPanel 제거됨 - Edge Function 필요
 
 export default function WorkspacePage() {
   const [selectedNoteId, setSelectedNoteId] = useState(null);
-  const [selectedReferenceId, setSelectedReferenceId] = useState(null);
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState("editor");
@@ -38,7 +35,6 @@ export default function WorkspacePage() {
   const {
     notes,
     folders,
-    references,
     projects,
     currentProject,
     setCurrentProject,
@@ -68,7 +64,6 @@ export default function WorkspacePage() {
       }
 
       setViewMode("editor");
-      setSelectedReferenceId(null);
       setSelectedNoteId(noteId);
       setIsTranslationMode(false); // Reset translation mode when a new note is selected
     },
@@ -79,26 +74,38 @@ export default function WorkspacePage() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const noteIdFromUrl = urlParams.get("noteId");
+    const projectIdFromUrl = urlParams.get("projectId");
+
+    // 프로젝트 ID가 있으면 먼저 설정
+    if (projectIdFromUrl && projects.length > 0) {
+      const project = projects.find((p) => p.id === projectIdFromUrl);
+      if (project && currentProject?.id !== projectIdFromUrl) {
+        setCurrentProject(project);
+      }
+    } else if (noteIdFromUrl && !projectIdFromUrl) {
+      // 프로젝트 ID가 없으면 currentProject를 null로 설정
+      setCurrentProject(null);
+    }
 
     if (noteIdFromUrl && allNotes.length > 0) {
       handleSelectNote(noteIdFromUrl, true);
       // URL에서 파라미터 제거
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [handleSelectNote, allNotes.length]); // allNotes.length 추가
+  }, [
+    handleSelectNote,
+    allNotes.length,
+    projects,
+    setCurrentProject,
+    currentProject?.id,
+  ]); // 의존성 추가
 
   // 데이터가 변경될 때 선택된 항목이 여전히 존재하는지 확인
   useEffect(() => {
     if (selectedNoteId && !allNotes.some((n) => n.id === selectedNoteId)) {
       setSelectedNoteId(null);
     }
-    if (
-      selectedReferenceId &&
-      !references.some((r) => r.id === selectedReferenceId)
-    ) {
-      setSelectedReferenceId(null);
-    }
-  }, [allNotes, references, selectedNoteId, selectedReferenceId]);
+  }, [allNotes, selectedNoteId]);
 
   const selectedNote = useMemo(() => {
     if (!selectedNoteId) return null;
@@ -111,18 +118,8 @@ export default function WorkspacePage() {
   };
 
   const handleViewItem = (itemId, itemType) => {
-    if (itemType === "reference") {
-      const referenceExists = references.some((r) => r.id === itemId);
-      if (!referenceExists) {
-        console.warn("참고문헌이 존재하지 않습니다:", itemId);
-        refetchData();
-        return;
-      }
-
-      setViewMode("editor");
-      setSelectedNoteId(null);
-      setSelectedReferenceId(itemId);
-    }
+    // reference 타입은 더 이상 지원하지 않음
+    console.warn("알 수 없는 항목 타입:", itemType);
   };
 
   const handleCreateNewNote = (newNote) => {
@@ -141,7 +138,6 @@ export default function WorkspacePage() {
 
       if (newMode !== "editor") {
         setSelectedNoteId(null);
-        setSelectedReferenceId(null);
       }
       return newMode;
     });
@@ -214,7 +210,6 @@ export default function WorkspacePage() {
             <Binder
               notes={notes}
               folders={folders}
-              references={references}
               onSelectNote={handleSelectNote}
               selectedNoteId={selectedNoteId}
               collapsed={sidebarCollapsed}
@@ -270,11 +265,6 @@ export default function WorkspacePage() {
               onNavigateToNote={handleSelectNote} // 네비게이션 함수 전달
               onEnterTranslationMode={handleEnterTranslationMode}
             />
-          ) : selectedReferenceId ? (
-            <ReferenceViewer
-              key={selectedReferenceId}
-              referenceId={selectedReferenceId}
-            />
           ) : (
             <WelcomeScreen />
           )}
@@ -288,8 +278,6 @@ export default function WorkspacePage() {
             currentProject={currentProject}
           />
         )}
-
-        {/* PomoFlow timer panel - Edge Function 필요로 제거됨 */}
       </div>
 
       <NewNoteModal

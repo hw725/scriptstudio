@@ -7,7 +7,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   FileText,
   FolderOpen,
-  BookOpen,
   Plus,
   ArrowRight,
   Clock,
@@ -16,10 +15,8 @@ import {
   FileSignature,
   Calendar,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, isToday, isYesterday } from "date-fns";
-// import PomoFlowStats from "./PomoFlowStats"; // Edge Function 필요 - 제거됨
 import ImportBackupButton from "./ImportBackupButton.jsx";
 
 const StatCard = ({
@@ -51,7 +48,7 @@ const RecentItem = ({ item, type, onSelect }) => {
     return format(date, "M월 d일");
   };
 
-  const Icon = type === "note" ? FileText : BookOpen;
+  const Icon = FileText;
 
   return (
     <div
@@ -141,22 +138,18 @@ const ProjectCard = ({ project, stats, onSelect }) => {
 };
 
 export default function DashboardPage() {
-  const { notes, references, projects, setCurrentProject, isLoading } =
-    useData();
+  const { notes, projects, setCurrentProject, isLoading } = useData();
   const [recentItems, setRecentItems] = useState([]);
 
   useEffect(() => {
-    const allItems = [
-      ...notes.map((note) => ({ ...note, type: "note" })),
-      ...references.map((ref) => ({ ...ref, type: "reference" })),
-    ];
+    const allItems = notes.map((note) => ({ ...note, type: "note" }));
 
     const sorted = allItems
       .sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))
       .slice(0, 5);
 
     setRecentItems(sorted);
-  }, [notes, references]);
+  }, [notes]);
 
   const handleSelectProject = (project) => {
     setCurrentProject(project);
@@ -165,16 +158,16 @@ export default function DashboardPage() {
 
   const handleSelectRecentItem = (item, type) => {
     if (type === "note") {
+      // URL 파라미터로 프로젝트 정보도 함께 전달
+      const params = new URLSearchParams();
+      params.append("noteId", item.id);
+
       if (item.project_id) {
-        const project = projects.find((p) => p.id === item.project_id);
-        if (project) setCurrentProject(project);
-      } else {
-        setCurrentProject(null);
+        params.append("projectId", item.project_id);
       }
-      window.location.href = createPageUrl("Workspace") + `?noteId=${item.id}`;
-    } else if (type === "reference") {
+
       window.location.href =
-        createPageUrl("Workspace") + `?referenceId=${item.id}`;
+        createPageUrl("Workspace") + `?${params.toString()}`;
     }
   };
 
@@ -209,7 +202,6 @@ export default function DashboardPage() {
   };
 
   const totalNotes = notes.length;
-  const totalReferences = references.length;
   const totalProjects = projects.length;
   const totalChars = notes.reduce((sum, note) => {
     if (!note.content) return sum;
@@ -261,7 +253,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatCard
             title="전체 문서"
             value={totalNotes}
@@ -277,13 +269,6 @@ export default function DashboardPage() {
             color="green"
           />
           <StatCard
-            title="참고문헌"
-            value={totalReferences}
-            icon={BookOpen}
-            description="수집된 자료"
-            color="purple"
-          />
-          <StatCard
             title="총 글자 수"
             value={totalChars.toLocaleString()}
             icon={BarChart3}
@@ -294,8 +279,6 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
-            {/* PomoFlowStats - Edge Function 필요로 제거됨 */}
-
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-slate-900">
@@ -385,10 +368,10 @@ export default function DashboardPage() {
                     <Button
                       variant="ghost"
                       className="w-full justify-start h-10"
-                      onClick={() =>
-                        (window.location.href =
-                          createPageUrl("Workspace") + "?view=daily")
-                      }
+                      onClick={() => {
+                        window.location.href =
+                          createPageUrl("Workspace") + "?view=daily";
+                      }}
                     >
                       <Calendar className="h-4 w-4 mr-3" />
                       오늘 일기 쓰기
@@ -396,20 +379,12 @@ export default function DashboardPage() {
                     <Button
                       variant="ghost"
                       className="w-full justify-start h-10"
-                      asChild
+                      onClick={() => {
+                        window.location.href = createPageUrl("Templates");
+                      }}
                     >
-                      <Link to={createPageUrl("Templates")}>
-                        <FileSignature className="h-4 w-4 mr-3" />
-                        템플릿 관리
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start h-10"
-                      onClick={handleGoToWorkspace}
-                    >
-                      <BookOpen className="h-4 w-4 mr-3" />
-                      참고문헌 추가
+                      <FileSignature className="h-4 w-4 mr-3" />
+                      템플릿 관리
                     </Button>
                     <ImportBackupButton
                       variant="ghost"

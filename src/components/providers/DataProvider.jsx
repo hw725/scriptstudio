@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import { Note } from "@/api/entities";
 import { Folder } from "@/api/entities";
-import { Reference } from "@/api/entities";
 import { Project } from "@/api/entities";
 import { syncManager } from "@/sync/syncManager";
 import { initDB } from "@/db/localDB";
@@ -22,7 +21,6 @@ export const useData = () => useContext(DataContext);
 export const DataProvider = ({ children }) => {
   const [notes, setNotes] = useState([]);
   const [folders, setFolders] = useState([]);
-  const [references, setReferences] = useState([]);
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,19 +85,16 @@ export const DataProvider = ({ children }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const [projectsData, notesData, foldersData, referencesData] =
-        await Promise.all([
-          Project.list("-created_date"),
-          Note.list("-created_date"),
-          Folder.list("-created_date"),
-          Reference.list("-created_date"),
-        ]);
+      const [projectsData, notesData, foldersData] = await Promise.all([
+        Project.list("-created_date"),
+        Note.list("-created_date"),
+        Folder.list("-created_date"),
+      ]);
 
       const safeProjects = projectsData || [];
       setProjects(safeProjects);
       setNotes(notesData || []);
       setFolders(foldersData || []);
-      setReferences(referencesData || []);
 
       // 현재 선택된 프로젝트가 더 이상 존재하지 않는 경우 처리
       if (
@@ -126,7 +121,6 @@ export const DataProvider = ({ children }) => {
       }
       setNotes([]);
       setFolders([]);
-      setReferences([]);
       setProjects([]);
     } finally {
       setIsLoading(false);
@@ -143,13 +137,7 @@ export const DataProvider = ({ children }) => {
     );
   };
 
-  const updateReferenceInState = (updatedReference) => {
-    setReferences((prev) =>
-      prev.map((r) =>
-        r.id === updatedReference.id ? { ...r, ...updatedReference } : r
-      )
-    );
-  };
+  // 참고문헌 기능 제거됨
 
   // 현재 프로젝트에 따라 필터링된 데이터
   const filteredNotes = currentProject
@@ -169,7 +157,6 @@ export const DataProvider = ({ children }) => {
   const value = {
     notes: filteredNotes,
     folders: filteredFolders,
-    references, // 참고문헌은 프로젝트와 무관하게 전체 표시
     projects,
     currentProject,
     setCurrentProject,
@@ -177,7 +164,6 @@ export const DataProvider = ({ children }) => {
     error,
     refetchData: fetchData,
     updateNoteInState,
-    updateReferenceInState,
     // 원본 데이터도 제공 (프로젝트 삭제 시 필요)
     allNotes: notes,
     allFolders: folders,

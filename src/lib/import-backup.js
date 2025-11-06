@@ -7,7 +7,6 @@ import {
   Note,
   Folder,
   Project,
-  Reference,
   Template,
   NoteVersion,
   DailyNote,
@@ -132,30 +131,7 @@ function mapProject(raw) {
   ]);
 }
 
-function mapReference(raw) {
-  const i = { ...raw };
-  mapTimestamps(i);
-
-  // MongoDB ID를 UUID로 변환
-  if (i.id) i.id = convertId(i.id);
-  if (i.project_id) i.project_id = convertId(i.project_id);
-
-  return pick(i, [
-    "id",
-    "project_id",
-    "type",
-    "title",
-    "authors",
-    "year",
-    "publisher",
-    "url",
-    "doi",
-    "isbn",
-    "metadata",
-    "created_date",
-    "updated_date",
-  ]);
-}
+// 참고문헌 기능 제거됨
 
 function mapTemplate(raw) {
   const i = { ...raw };
@@ -434,19 +410,7 @@ export async function importBackupJSON(json, { _mode = "upsert" } = {}) {
     console.log("⏭️  템플릿 없음, 건너뜀");
   }
 
-  // 6) References
-  const references = extractList(json, ["references", "References"]);
-  if (references.length > 0) {
-    report.references = await upsertEntity(
-      Reference,
-      mapReference,
-      references,
-      "id",
-      "참고문헌"
-    );
-  } else {
-    console.log("⏭️  참고문헌 없음, 건너뜀");
-  }
+  // 6) References 제거됨
 
   // 7) Daily Notes
   const dailyNotes = extractList(json, ["daily_notes", "DailyNotes"]);

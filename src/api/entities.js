@@ -7,8 +7,6 @@ export const Note = base44.entities.Note;
 
 export const Folder = base44.entities.Folder;
 
-export const Reference = base44.entities.Reference;
-
 export const ProjectSettings = base44.entities.ProjectSettings;
 
 export const Project = base44.entities.Project;

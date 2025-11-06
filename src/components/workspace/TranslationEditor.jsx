@@ -12,7 +12,6 @@ import {
   Eye,
 } from "lucide-react";
 import { useData } from "@/components/providers/DataProvider";
-// import PomoFlowPanel from "./PomoFlowPanel"; // Edge Function 필요 - 제거됨
 
 const ResizableHandle = ({ onMouseDown }) => (
   <div
@@ -94,7 +93,6 @@ export default function TranslationEditor({
         project_id: sourceNote.project_id,
         folder_id: sourceNote.folder_id,
         translation_of_id: sourceNote.id,
-        pomoflow_task_id: sourceNote.pomoflow_task_id || null, // 원문의 task_id 복사
       });
 
       // 원본 노트에도 번역 노트 ID 연결
@@ -156,9 +154,6 @@ export default function TranslationEditor({
   const handleSwapPanels = () => {
     setLeftPanelWidth(100 - leftPanelWidth);
   };
-
-  // PomoFlow 관련 코드 제거됨
-  // const linkedNote = sourceNote?.pomoflow_task_id ? sourceNote : translationNote?.pomoflow_task_id ? translationNote : sourceNote;
 
   if (!sourceNote) {
     return (
@@ -390,8 +385,6 @@ export default function TranslationEditor({
           </div>
         </div>
       </div>
-
-      {/* PomoFlow Panel - Edge Function 필요로 제거됨 */}
 
       <style>{`
         /* 번역 모드 전용 스타일 - 패널별로 독립적으로 적용 */

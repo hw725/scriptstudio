@@ -136,7 +136,7 @@ class SyncManager {
   async pullFromServer() {
     console.log("⬇️ 서버에서 데이터 가져오는 중...");
 
-    const stores = ["notes", "projects", "templates", "references", "folders"];
+    const stores = ["notes", "projects", "templates", "folders"];
 
     for (const storeName of stores) {
       try {
@@ -303,7 +303,6 @@ class SyncManager {
     const mapping = {
       notes: "Note",
       folders: "Folder",
-      references: "Reference",
       projects: "Project",
       templates: "Template",
       project_settings: "ProjectSettings",

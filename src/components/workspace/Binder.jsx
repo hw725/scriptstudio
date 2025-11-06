@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Folder as FolderEntity } from "@/api/entities";
 import { Note } from "@/api/entities";
-import { Reference } from "@/api/entities";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import {
   ChevronDown,
@@ -11,7 +10,6 @@ import {
   Plus,
   PanelLeftClose,
   PanelLeftOpen,
-  Book,
   PenSquare,
   LayoutGrid,
   List,
@@ -116,7 +114,7 @@ const TreeItem = ({
   onSelectNote,
   selectedNoteId,
   children,
-  onViewItem,
+  onViewItem: _onViewItem,
   isDragging,
   isRenaming,
   onCommitRename,
@@ -131,7 +129,7 @@ const TreeItem = ({
   const [renameValue, setRenameValue] = useState(item.name || item.title);
 
   const isSelected = type === "note" && selectedNoteId === item.id;
-  const Icon = type === "folder" ? Folder : type === "note" ? FileText : Book;
+  const Icon = type === "folder" ? Folder : FileText;
 
   const handleToggle = (e) => {
     e.stopPropagation();
@@ -143,8 +141,6 @@ const TreeItem = ({
   const handleSelect = () => {
     if (type === "note") {
       onSelectNote(item.id);
-    } else if (type === "reference") {
-      onViewItem(item.id, "reference");
     }
   };
 
@@ -318,27 +314,6 @@ const TreeItem = ({
     );
   }
 
-  if (type === "reference") {
-    return (
-      <ContextMenu>
-        <ContextMenuTrigger>{treeItemContent}</ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem onClick={() => onStartRename(item.id)}>
-            이름 바꾸기
-          </ContextMenuItem>
-          <ContextMenuSeparator />
-          <ContextMenuItem
-            onClick={() => onDeleteItem(item.id, "reference")}
-            className="text-red-600 focus:bg-red-100 focus:text-red-600"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            삭제
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-    );
-  }
-
   return treeItemContent;
 };
 
@@ -354,9 +329,6 @@ const NewItemInput = ({ parentId, type, onCommit, onCancel, projectId }) => {
             parent_id: parentId,
             project_id: projectId,
           });
-          onCommit();
-        } else if (type === "reference") {
-          await Reference.create({ title: name.trim(), project_id: projectId });
           onCommit();
         }
       } else {
@@ -378,7 +350,7 @@ const NewItemInput = ({ parentId, type, onCommit, onCancel, projectId }) => {
         onChange={(e) => setName(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={onCancel}
-        placeholder={type === "folder" ? "폴더 이름" : "참고문헌 제목"}
+        placeholder="폴더 이름"
         className="h-8 text-sm"
       />
     </div>
@@ -420,7 +392,6 @@ const CollapsedProjectSelector = () => {
 export default function Binder({
   notes,
   folders,
-  references,
   onSelectNote,
   selectedNoteId,
   collapsed,
@@ -465,12 +436,21 @@ export default function Binder({
 
   const allTags = [...new Set(notes.flatMap((note) => note.tags || []))].sort();
 
-  const filteredNotes =
-    selectedTags.length > 0
-      ? notes.filter((note) =>
-          selectedTags.every((tag) => (note.tags || []).includes(tag))
-        )
-      : notes;
+  // 현재 프로젝트의 노트만 필터링 + 태그 필터링
+  const filteredNotes = notes.filter((note) => {
+    // 프로젝트 필터링
+    const matchesProject = currentProject
+      ? note.project_id === currentProject.id
+      : !note.project_id; // 프로젝트 선택 안 했으면 project_id 없는 노트만
+
+    // 태그 필터링
+    const matchesTags =
+      selectedTags.length > 0
+        ? selectedTags.every((tag) => (note.tags || []).includes(tag))
+        : true;
+
+    return matchesProject && matchesTags;
+  });
 
   const handleCommitNewItem = async () => {
     setNewItem(null);
@@ -482,14 +462,11 @@ export default function Binder({
       try {
         const isFolder = folders.some((f) => f.id === itemId);
         const isNote = notes.some((n) => n.id === itemId);
-        const isReference = references.some((r) => r.id === itemId);
 
         if (isFolder) {
           await FolderEntity.update(itemId, { name: newName });
         } else if (isNote) {
           await Note.update(itemId, { title: newName });
-        } else if (isReference) {
-          await Reference.update(itemId, { title: newName });
         }
         await refetchData(); // await 추가
       } catch (error) {
@@ -515,8 +492,6 @@ export default function Binder({
           await Note.delete(itemId);
         } else if (type === "folder") {
           await FolderEntity.delete(itemId);
-        } else if (type === "reference") {
-          await Reference.delete(itemId);
         }
         await refetchData(); // await 추가
       } catch (error) {
@@ -558,17 +533,14 @@ export default function Binder({
           ? null
           : destination.droppableId.replace("folder-", "");
 
-      // 노트인지 폴더인지 참고문헌인지 확인
+      // 노트인지 폴더인지 확인
       const isNote = notes.some((n) => n.id === draggableId);
       const isFolder = folders.some((f) => f.id === draggableId);
-      const isReference = references.some((r) => r.id === draggableId);
 
       if (isNote) {
         await Note.update(draggableId, { folder_id: targetFolderId });
       } else if (isFolder) {
         await FolderEntity.update(draggableId, { parent_id: targetFolderId });
-      } else if (isReference) {
-        await Reference.update(draggableId, { folder_id: targetFolderId });
       }
 
       await refetchData();
@@ -581,7 +553,11 @@ export default function Binder({
 
   const renderTree = (parentId = null, depth = 0) => {
     const childFolders = folders.filter((f) => {
-      return (f.parent_id || null) === parentId;
+      const matchesParent = (f.parent_id || null) === parentId;
+      const matchesProject = currentProject
+        ? f.project_id === currentProject.id
+        : !f.project_id;
+      return matchesParent && matchesProject;
     });
 
     const childNotes = filteredNotes.filter((n) => {
@@ -750,44 +726,6 @@ export default function Binder({
             <NewItemInput
               parentId={newItem.parentId}
               type="folder"
-              projectId={currentProject?.id}
-              onCommit={handleCommitNewItem}
-              onCancel={() => setNewItem(null)}
-            />
-          )}
-
-          <SectionHeader
-            title="참고문헌"
-            icon={<Book className="h-4 w-4 text-indigo-600" />}
-            onAdd={() => setNewItem({ type: "reference", parentId: null })}
-          />
-
-          <div className="py-2">
-            {references.map((reference) => (
-              <TreeItem
-                key={reference.id}
-                item={reference}
-                type="reference"
-                depth={0}
-                onSelectNote={onSelectNote}
-                selectedNoteId={selectedNoteId}
-                onViewItem={onViewItem}
-                isRenaming={renamingItemId === reference.id}
-                onCommitRename={handleCommitRename}
-                onStartRename={handleStartRename}
-                onMoveToProject={handleMoveToProject}
-                onDeleteItem={handleDeleteItem}
-                projects={projects}
-                currentProject={currentProject}
-                onEnterTranslationMode={onEnterTranslationMode}
-              />
-            ))}
-          </div>
-
-          {newItem && newItem.type === "reference" && (
-            <NewItemInput
-              parentId={newItem.parentId}
-              type="reference"
               projectId={currentProject?.id}
               onCommit={handleCommitNewItem}
               onCancel={() => setNewItem(null)}

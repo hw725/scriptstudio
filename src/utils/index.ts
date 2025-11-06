@@ -1,6 +1,4 @@
-
-
-
 export function createPageUrl(pageName: string) {
-    return '/' + pageName.toLowerCase().replace(/ /g, '-');
+  // Use the given casing to match react-router routes (e.g., '/Workspace').
+  return "/" + pageName.replace(/ /g, "-");
 }
