@@ -26,35 +26,39 @@ export default function Dashboard() {
     totalFolders: 0,
     recentNotes: [],
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     refreshData();
   }, [refreshData]);
 
   useEffect(() => {
-    if (!notes || !projects || !folders) return;
+    // 데이터가 로드될 때까지 대기
+    if (notes !== null && projects !== null && folders !== null) {
+      setIsLoading(false);
 
-    const sevenDaysAgo = subDays(new Date(), 7).getTime();
-    const recentNotes = notes
-      .filter((note) => {
-        const updated = new Date(
-          note.updated_date || note.created_date
-        ).getTime();
-        return updated >= sevenDaysAgo;
-      })
-      .sort((a, b) => {
-        const aTime = new Date(a.updated_date || a.created_date).getTime();
-        const bTime = new Date(b.updated_date || b.created_date).getTime();
-        return bTime - aTime;
-      })
-      .slice(0, 5);
+      const sevenDaysAgo = subDays(new Date(), 7).getTime();
+      const recentNotes = notes
+        .filter((note) => {
+          const updated = new Date(
+            note.updated_date || note.created_date
+          ).getTime();
+          return updated >= sevenDaysAgo;
+        })
+        .sort((a, b) => {
+          const aTime = new Date(a.updated_date || a.created_date).getTime();
+          const bTime = new Date(b.updated_date || b.created_date).getTime();
+          return bTime - aTime;
+        })
+        .slice(0, 5);
 
-    setStats({
-      totalNotes: notes.length,
-      totalProjects: projects.length,
-      totalFolders: folders.length,
-      recentNotes,
-    });
+      setStats({
+        totalNotes: notes.length,
+        totalProjects: projects.length,
+        totalFolders: folders.length,
+        recentNotes,
+      });
+    }
   }, [notes, projects, folders]);
 
   const getRelativeTime = (dateString) => {
@@ -84,6 +88,17 @@ export default function Dashboard() {
   const handleGoToWorkspace = () => {
     navigate("/workspace");
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 p-8">
