@@ -1,6 +1,134 @@
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 
+// HTML을 마크다운으로 변환 (헤딩/리스트/링크 등 보존)
+function htmlToMarkdown(html) {
+  let markdown = html;
+
+  // 코드 블록 먼저 처리
+  markdown = markdown.replace(
+    /<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/gi,
+    (m, code) => {
+      // 코드 내부의 태그 제거 및 엔티티 디코딩 최소화
+      const cleaned = code
+        .replace(/<[^>]+>/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+      return `\n\n\x60\x60\x60\n${cleaned}\n\x60\x60\x60\n\n`;
+    }
+  );
+
+  // 헤딩
+  markdown = markdown.replace(
+    /<h1[^>]*>([\s\S]*?)<\/h1>/gi,
+    (m, t) => `# ${t}\n\n`
+  );
+  markdown = markdown.replace(
+    /<h2[^>]*>([\s\S]*?)<\/h2>/gi,
+    (m, t) => `## ${t}\n\n`
+  );
+  markdown = markdown.replace(
+    /<h3[^>]*>([\s\S]*?)<\/h3>/gi,
+    (m, t) => `### ${t}\n\n`
+  );
+  markdown = markdown.replace(
+    /<h4[^>]*>([\s\S]*?)<\/h4>/gi,
+    (m, t) => `#### ${t}\n\n`
+  );
+  markdown = markdown.replace(
+    /<h5[^>]*>([\s\S]*?)<\/h5>/gi,
+    (m, t) => `##### ${t}\n\n`
+  );
+  markdown = markdown.replace(
+    /<h6[^>]*>([\s\S]*?)<\/h6>/gi,
+    (m, t) => `###### ${t}\n\n`
+  );
+
+  // 굵게/이탤릭/취소선/인라인코드
+  markdown = markdown.replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, "**$1**");
+  markdown = markdown.replace(/<b[^>]*>([\s\S]*?)<\/b>/gi, "**$1**");
+  markdown = markdown.replace(/<em[^>]*>([\s\S]*?)<\/em>/gi, "*$1*");
+  markdown = markdown.replace(/<i[^>]*>([\s\S]*?)<\/i>/gi, "*$1*");
+  markdown = markdown.replace(
+    /<(s|del)[^>]*>([\s\S]*?)<\/(s|del)>/gi,
+    "~~$2~~"
+  );
+  markdown = markdown.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, "`$1`");
+
+  // 링크/이미지
+  markdown = markdown.replace(
+    /<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi,
+    (m, href, label) => `[${label}](${href})`
+  );
+  markdown = markdown.replace(
+    /<img[^>]*src="([^"]+)"[^>]*alt="([^"]*)"[^>]*>/gi,
+    (m, src, alt) => `![${alt}](${src})`
+  );
+
+  // 체크박스/리스트 항목
+  markdown = markdown.replace(
+    /<li[^>]*data-checked="true"[^>]*>([\s\S]*?)<\/li>/gi,
+    (m, t) => `- [x] ${t}\n`
+  );
+  markdown = markdown.replace(
+    /<li[^>]*data-checked="false"[^>]*>([\s\S]*?)<\/li>/gi,
+    (m, t) => `- [ ] ${t}\n`
+  );
+  // 일반 ul -> "- " 리스트
+  markdown = markdown.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (m, c) => {
+    return c.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (mm, t) => `- ${t}\n`);
+  });
+  // ol -> 번호 리스트
+  markdown = markdown.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (m, c) => {
+    let i = 1;
+    return c.replace(
+      /<li[^>]*>([\s\S]*?)<\/li>/gi,
+      (mm, t) => `${i++}. ${t}\n`
+    );
+  });
+
+  // 인용구
+  markdown = markdown.replace(
+    /<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi,
+    (m, c) => {
+      const inner = c
+        .replace(/<br\s*\/?>(?=.)/gi, "\n")
+        .replace(/<[^>]+>/g, "");
+      return (
+        inner
+          .split(/\r?\n/)
+          .map((line) => (line ? `> ${line}` : ">"))
+          .join("\n") + "\n\n"
+      );
+    }
+  );
+
+  // 줄바꿈과 단락 처리
+  markdown = markdown.replace(/<br\s*\/?>(?=.)/gi, "\n");
+  markdown = markdown.replace(
+    /<p[^>]*>([\s\S]*?)<\/p>/gi,
+    (m, t) => `${t}\n\n`
+  );
+
+  // 남은 태그 제거 및 엔티티 처리
+  markdown = markdown.replace(/<[^>]+>/g, "");
+  markdown = markdown
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  // 빈 줄 정리
+  markdown = markdown.replace(/\n{3,}/g, "\n\n");
+  return markdown.trim();
+}
+
 // 마크다운을 HTML로 변환하는 간단한 함수
 function markdownToHtml(markdown) {
   let html = markdown;
@@ -46,82 +174,6 @@ function markdownToHtml(markdown) {
   return html;
 }
 
-// HTML을 순수 텍스트로 변환 (개행 유지, 태그 제거)
-function htmlToPlainText(html) {
-  let text = html;
-
-  // 줄바꿈 대응
-  text = text.replace(/<br\s*\/?>/gi, "\n");
-
-  // 목록 항목은 접두사 추가 후 줄바꿈
-  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (m, c) => `- ${c}\n`);
-
-  // 블록 요소의 경계에 줄바꿈 부여
-  const blockTags = [
-    "p",
-    "div",
-    "section",
-    "article",
-    "header",
-    "footer",
-    "main",
-    "aside",
-    "h1",
-    "h2",
-    "h3",
-    "h4",
-    "h5",
-    "h6",
-    "pre",
-    "blockquote",
-    "ul",
-    "ol",
-    "table",
-    "tr",
-    "td",
-  ];
-  blockTags.forEach((tag) => {
-    const openRe = new RegExp(`<${tag}[^>]*>`, "gi");
-    const closeRe = new RegExp(`</${tag}>`, "gi");
-    text = text.replace(openRe, "");
-    // 닫는 태그 뒤에 줄바꿈
-    text = text.replace(closeRe, "\n");
-  });
-
-  // 링크: 앵커 텍스트만 남기고 URL은 괄호로 보조 표시
-  text = text.replace(
-    /<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi,
-    (m, href, label) => {
-      // 텍스트 중심. 필요 시 `${label} (${href})` 로 바꿀 수 있음
-      return label;
-    }
-  );
-
-  // 이미지: 대체 텍스트만 남김
-  text = text.replace(/<img[^>]*alt="([^"]*)"[^>]*>/gi, (m, alt) =>
-    alt ? `[${alt}]` : ""
-  );
-
-  // 잔여 모든 태그 제거
-  text = text.replace(/<[^>]+>/g, "");
-
-  // HTML 엔티티 디코딩
-  text = text
-    .replace(/&nbsp;/g, " ")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-
-  // 공백 정리: 줄 끝 공백 제거
-  text = text.replace(/[ \t]+$/gm, "");
-  // 3줄 이상 연속 개행을 2줄로 축약
-  text = text.replace(/\n{3,}/g, "\n\n");
-
-  return text.trim();
-}
-
 export const MarkdownClipboard = Extension.create({
   name: "markdownClipboard",
 
@@ -151,10 +203,10 @@ export const MarkdownClipboard = Extension.create({
               };
 
               const html = getSelectionHtml();
-              const plain = htmlToPlainText(html);
+              const markdown = htmlToMarkdown(html);
 
-              // 클립보드: text/plain 만 설정하여 어디에 붙여넣어도 태그가 보이지 않도록 강제
-              event.clipboardData.setData("text/plain", plain);
+              // 클립보드: text/plain 에 마크다운 저장 (HTML 미포함)
+              event.clipboardData.setData("text/plain", markdown);
               event.preventDefault();
 
               return true;
@@ -177,9 +229,9 @@ export const MarkdownClipboard = Extension.create({
               };
 
               const html = getSelectionHtml();
-              const plain = htmlToPlainText(html);
+              const markdown = htmlToMarkdown(html);
 
-              event.clipboardData.setData("text/plain", plain);
+              event.clipboardData.setData("text/plain", markdown);
               event.preventDefault();
 
               // 선택된 내용 삭제
@@ -193,8 +245,10 @@ export const MarkdownClipboard = Extension.create({
             return html;
           },
           transformPastedText(text) {
-            // 마크다운 문법이 포함되어 있으면 HTML로 변환
-            if (text.match(/[#*`[\]]/)) {
+            // 흔한 마크다운 패턴 감지 시 WYSIWYG(HTML)로 변환
+            const mdPattern =
+              /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|\d+\.\s|>\s|```)|\*\*[^*\n]+\*\*|_[^_\n]+_|`[^`\n]+`|\[[^\]]+\]\([^)]+\)/;
+            if (mdPattern.test(text)) {
               return markdownToHtml(text);
             }
             return text;
