@@ -11,7 +11,6 @@ import { NoteVersion } from "@/api/entities";
 const TiptapEditor = lazy(() => import("./TiptapEditor"));
 import "./TiptapEditor.css";
 import {
-  BookOpen,
   ChevronsLeft,
   GripVertical,
   History,
@@ -136,7 +135,6 @@ export default function Editor({
   const [justSaved, setJustSaved] = useState(false);
 
   const [versions, setVersions] = useState([]);
-  const [, setShowReferenceModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [, setSuggestionState] = useState({
     isOpen: false,
@@ -697,20 +695,8 @@ export default function Editor({
                 버전 히스토리
               </DropdownMenuItem>
 
-              {/* 편집 보조 섹션 */}
-              <DropdownMenuSeparator />
-              <div className="px-2 py-1 text-[11px] font-semibold text-slate-500">
-                편집 보조
-              </div>
-              <DropdownMenuItem
-                onClick={() => setShowReferenceModal(true)}
-                disabled={isReadMode}
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                참고문헌 삽입
-              </DropdownMenuItem>
-
               {/* 행 스타일 섹션 */}
+              <DropdownMenuSeparator />
               <div className="px-2 pt-1 pb-0.5 text-[11px] font-semibold text-slate-500">
                 행 스타일
               </div>
