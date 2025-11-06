@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { useData } from "@/components/providers/DataProvider";
 import Binder from "@/components/workspace/Binder";
 import Editor from "@/components/workspace/Editor";
@@ -19,7 +20,9 @@ import NewNoteModal from "./NewNoteModal";
 import DailyNotesView from "./DailyNotesView";
 import TranslationEditor from "./TranslationEditor";
 
+// ...existing code...
 export default function WorkspacePage() {
+  const { toast } = useToast();
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [sidebarWidth, setSidebarWidth] = useState(280);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -76,29 +79,48 @@ export default function WorkspacePage() {
     const noteIdFromUrl = urlParams.get("noteId");
     const projectIdFromUrl = urlParams.get("projectId");
 
-    // 프로젝트 ID가 있으면 먼저 설정
+    let validNote = null;
+    let validProject = null;
+
     if (projectIdFromUrl && projects.length > 0) {
-      const project = projects.find((p) => p.id === projectIdFromUrl);
-      if (project && currentProject?.id !== projectIdFromUrl) {
-        setCurrentProject(project);
+      validProject = projects.find((p) => p.id === projectIdFromUrl);
+      if (validProject && currentProject?.id !== projectIdFromUrl) {
+        setCurrentProject(validProject);
+      }
+      if (!validProject) {
+        toast({
+          title: "존재하지 않는 프로젝트",
+          description: "이 프로젝트는 삭제되었거나 찾을 수 없습니다.",
+          variant: "destructive",
+        });
+        setCurrentProject(null);
       }
     } else if (noteIdFromUrl && !projectIdFromUrl) {
-      // 프로젝트 ID가 없으면 currentProject를 null로 설정
       setCurrentProject(null);
     }
 
     if (noteIdFromUrl && allNotes.length > 0) {
-      handleSelectNote(noteIdFromUrl, true);
-      // URL에서 파라미터 제거
+      validNote = allNotes.find((n) => n.id === noteIdFromUrl);
+      if (validNote) {
+        handleSelectNote(noteIdFromUrl, true);
+      } else {
+        toast({
+          title: "존재하지 않는 문서",
+          description: "이 문서는 삭제되었거나 찾을 수 없습니다.",
+          variant: "destructive",
+        });
+        setSelectedNoteId(null);
+      }
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [
     handleSelectNote,
-    allNotes.length,
+    allNotes,
     projects,
     setCurrentProject,
     currentProject?.id,
-  ]); // 의존성 추가
+    toast,
+  ]);
 
   // 데이터가 변경될 때 선택된 항목이 여전히 존재하는지 확인
   useEffect(() => {
@@ -109,7 +131,7 @@ export default function WorkspacePage() {
 
   const selectedNote = useMemo(() => {
     if (!selectedNoteId) return null;
-    return allNotes.find((n) => n.id === selectedNoteId);
+    return allNotes.find((n) => n.id === selectedNoteId) || null;
   }, [selectedNoteId, allNotes]);
 
   const handleShowNewNoteModal = (folderId = null) => {

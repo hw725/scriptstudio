@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { useData } from "@/components/providers/DataProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -140,6 +141,7 @@ const ProjectCard = ({ project, stats, onSelect }) => {
 export default function DashboardPage() {
   const { notes, projects, setCurrentProject, isLoading } = useData();
   const [recentItems, setRecentItems] = useState([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const allItems = notes.map((note) => ({ ...note, type: "note" }));
@@ -152,26 +154,53 @@ export default function DashboardPage() {
   }, [notes]);
 
   const handleSelectProject = (project) => {
+    // 실제 존재하는 프로젝트인지 확인
+    if (!project || !projects.some((p) => p.id === project.id)) {
+      toast({
+        title: "존재하지 않는 프로젝트",
+        description: "이 프로젝트는 삭제되었거나 찾을 수 없습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
     setCurrentProject(project);
     window.location.href = createPageUrl("Workspace");
   };
 
   const handleSelectRecentItem = (item, type) => {
     if (type === "note") {
+      // 실제 존재하는 노트인지 확인
+      const note = notes.find((n) => n.id === item.id);
+      if (!note) {
+        toast({
+          title: "존재하지 않는 문서",
+          description: "이 문서는 삭제되었거나 찾을 수 없습니다.",
+          variant: "destructive",
+        });
+        return;
+      }
       // URL 파라미터로 프로젝트 정보도 함께 전달
       const params = new URLSearchParams();
       params.append("noteId", item.id);
-
       if (item.project_id) {
         params.append("projectId", item.project_id);
       }
-
       window.location.href =
         createPageUrl("Workspace") + `?${params.toString()}`;
     }
   };
 
   const handleGoToWorkspace = () => {
+    // 현재 프로젝트가 유효한지 체크
+    if (projects.length > 0 && !projects.some((p) => p.id === projects[0].id)) {
+      toast({
+        title: "프로젝트를 찾을 수 없음",
+        description:
+          "워크스페이스로 이동할 수 없습니다. 프로젝트가 존재하지 않습니다.",
+        variant: "destructive",
+      });
+      return;
+    }
     window.location.href = createPageUrl("Workspace");
   };
 
