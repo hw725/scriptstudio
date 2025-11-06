@@ -23,13 +23,29 @@ class OfflineEntityWrapper {
         const byId = new Map(safeServer.map((i) => [i.id, i]));
 
         for (const local of localAll) {
+          // pending_delete 상태는 병합하지 않음
+          if (local.sync_status === "pending_delete") {
+            continue;
+          }
+
           const existing = byId.get(local.id) || {};
           const serverTime =
             existing?.updated_date || existing?.updated_at || 0;
           const localTime = local.updated_date || local.updated_at || 0;
 
-          // 로컬에만 있거나, 로컬이 더 최신이면 로컬 데이터 사용
-          if (!existing.id || new Date(localTime) >= new Date(serverTime)) {
+          // 로컬에만 있는 경우
+          if (!existing.id) {
+            // pending 상태(생성/수정 중)인 경우만 포함
+            if (local.sync_status === "pending") {
+              byId.set(local.id, local);
+            }
+            // 서버에 없는데 synced 상태면 서버에서 삭제된 것 → 로컬에서도 제거
+            else if (local.sync_status === "synced") {
+              await localDB.delete(this.storeName, local.id);
+            }
+          }
+          // 로컬이 더 최신이면 로컬 데이터 사용
+          else if (new Date(localTime) > new Date(serverTime)) {
             byId.set(local.id, { ...existing, ...local });
           }
         }
