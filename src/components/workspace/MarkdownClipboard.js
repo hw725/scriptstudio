@@ -153,9 +153,8 @@ export const MarkdownClipboard = Extension.create({
               const html = getSelectionHtml();
               const plain = htmlToPlainText(html);
 
-              // 클립보드: text/plain 은 태그 제거 + 개행 유지, text/html 은 원본 유지
+              // 클립보드: text/plain 만 설정하여 어디에 붙여넣어도 태그가 보이지 않도록 강제
               event.clipboardData.setData("text/plain", plain);
-              event.clipboardData.setData("text/html", html);
               event.preventDefault();
 
               return true;
@@ -181,7 +180,6 @@ export const MarkdownClipboard = Extension.create({
               const plain = htmlToPlainText(html);
 
               event.clipboardData.setData("text/plain", plain);
-              event.clipboardData.setData("text/html", html);
               event.preventDefault();
 
               // 선택된 내용 삭제
