@@ -168,9 +168,7 @@ function markdownToHtml(markdown) {
   html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
   html = html.replace(/^(\d+)\. (.+)$/gm, "<li>$2</li>");
 
-  // 단락
-  html = html.replace(/^(?!<[hul]|<li|<pre)(.+)$/gm, "<p>$1</p>");
-
+  // 줄바꿈은 그대로 유지 (TipTap이 자동 처리)
   return html;
 }
 
