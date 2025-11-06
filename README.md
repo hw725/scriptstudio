@@ -77,10 +77,6 @@ npm run dev
 | 문서 | 설명 |
 |------|------|
 | [QUICK_START.md](./QUICK_START.md) | ⚡ 5분 안에 온라인 모드 설정하기 |
-| [HYBRID_MODE_GUIDE.md](./HYBRID_MODE_GUIDE.md) | 🔄 완벽한 하이브리드 모드 가이드 |
-| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | 🚀 GitHub + Vercel 배포 가이드 |
-| [MULTI_DEVICE_GUIDE.md](./MULTI_DEVICE_GUIDE.md) | 🌍 다중 기기 사용 가이드 |
-| [INTEGRATION_TEST_GUIDE.md](./INTEGRATION_TEST_GUIDE.md) | ✅ 통합 테스트 가이드 |
 | [supabase-schema.sql](./supabase-schema.sql) | 🗄️ Supabase 데이터베이스 스키마 |
 
 ---
@@ -172,12 +168,8 @@ window.__scriptstudio_offline_set(false) // 온라인 모드
 
 ```bash
 npm run dev
-# 브라우저에서 test-checklist.html 열기
+# 브라우저에서 앱을 직접 확인하세요 (http://localhost:5173)
 ```
-
-### 전체 테스트
-
-[INTEGRATION_TEST_GUIDE.md](./INTEGRATION_TEST_GUIDE.md) 참조
 
 ---
 
@@ -209,7 +201,7 @@ MIT License
 
 문제가 발생하면:
 1. [Issues](https://github.com/your-username/scriptstudio/issues)에 등록
-2. [문서](./HYBRID_MODE_GUIDE.md) 확인
+2. QUICK_START.md를 우선 확인
 3. app@base44.com으로 문의
 
 ---

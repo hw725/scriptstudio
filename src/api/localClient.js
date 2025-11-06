@@ -38,16 +38,18 @@ class LocalEntity {
 
   async create(data) {
     console.log(`✏️ 로컬에 ${this.storeName} 생성:`, data);
+    const now = new Date().toISOString();
     const item = {
       ...data,
       id:
         data.id ||
         `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      created_date: data.created_date || Date.now(),
-      updated_date: data.updated_date || Date.now(),
+      created_date: data.created_date || now,
+      updated_date: data.updated_date || now,
     };
 
     await localDB.put(this.storeName, item);
+    console.log(`✅ ${this.storeName} 생성 완료:`, item.id);
     return item;
   }
 
@@ -62,7 +64,7 @@ class LocalEntity {
       ...existing,
       ...data,
       id, // ID는 변경하지 않음
-      updated_date: Date.now(),
+      updated_date: new Date().toISOString(),
     };
 
     await localDB.put(this.storeName, updated);

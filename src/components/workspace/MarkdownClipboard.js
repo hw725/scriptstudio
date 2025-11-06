@@ -1,100 +1,6 @@
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 
-// HTML을 마크다운으로 변환하는 함수
-function htmlToMarkdown(html) {
-  let markdown = html;
-
-  // 헤딩 변환
-  markdown = markdown.replace(/<h1[^>]*>(.*?)<\/h1>/gi, "# $1\n\n");
-  markdown = markdown.replace(/<h2[^>]*>(.*?)<\/h2>/gi, "## $1\n\n");
-  markdown = markdown.replace(/<h3[^>]*>(.*?)<\/h3>/gi, "### $1\n\n");
-  markdown = markdown.replace(/<h4[^>]*>(.*?)<\/h4>/gi, "#### $1\n\n");
-  markdown = markdown.replace(/<h5[^>]*>(.*?)<\/h5>/gi, "##### $1\n\n");
-  markdown = markdown.replace(/<h6[^>]*>(.*?)<\/h6>/gi, "###### $1\n\n");
-
-  // 볼드, 이탤릭, 취소선
-  markdown = markdown.replace(/<strong[^>]*>(.*?)<\/strong>/gi, "**$1**");
-  markdown = markdown.replace(/<b[^>]*>(.*?)<\/b>/gi, "**$1**");
-  markdown = markdown.replace(/<em[^>]*>(.*?)<\/em>/gi, "*$1*");
-  markdown = markdown.replace(/<i[^>]*>(.*?)<\/i>/gi, "*$1*");
-  markdown = markdown.replace(/<s[^>]*>(.*?)<\/s>/gi, "~~$1~~");
-  markdown = markdown.replace(/<del[^>]*>(.*?)<\/del>/gi, "~~$1~~");
-
-  // 코드
-  markdown = markdown.replace(/<code[^>]*>(.*?)<\/code>/gi, "`$1`");
-  markdown = markdown.replace(
-    /<pre[^>]*><code[^>]*>(.*?)<\/code><\/pre>/gis,
-    "```\n$1\n```\n"
-  );
-
-  // 링크
-  markdown = markdown.replace(
-    /<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi,
-    "[$2]($1)"
-  );
-
-  // 이미지
-  markdown = markdown.replace(
-    /<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi,
-    "![$2]($1)"
-  );
-
-  // 리스트
-  markdown = markdown.replace(/<ul[^>]*>(.*?)<\/ul>/gis, (match, content) => {
-    return content.replace(/<li[^>]*>(.*?)<\/li>/gi, "- $1\n");
-  });
-  markdown = markdown.replace(/<ol[^>]*>(.*?)<\/ol>/gis, (match, content) => {
-    let index = 1;
-    return content.replace(/<li[^>]*>(.*?)<\/li>/gi, () => `${index++}. $1\n`);
-  });
-
-  // 체크리스트
-  markdown = markdown.replace(
-    /<li[^>]*data-checked="true"[^>]*>(.*?)<\/li>/gi,
-    "- [x] $1\n"
-  );
-  markdown = markdown.replace(
-    /<li[^>]*data-checked="false"[^>]*>(.*?)<\/li>/gi,
-    "- [ ] $1\n"
-  );
-
-  // 인용구
-  markdown = markdown.replace(
-    /<blockquote[^>]*>(.*?)<\/blockquote>/gis,
-    (match, content) => {
-      return (
-        content
-          .split("\n")
-          .map((line) => `> ${line}`)
-          .join("\n") + "\n"
-      );
-    }
-  );
-
-  // 수평선
-  markdown = markdown.replace(/<hr[^>]*>/gi, "\n---\n");
-
-  // 단락
-  markdown = markdown.replace(/<p[^>]*>(.*?)<\/p>/gi, "$1\n\n");
-  markdown = markdown.replace(/<br[^>]*>/gi, "\n");
-
-  // 남은 HTML 태그 제거
-  markdown = markdown.replace(/<[^>]+>/g, "");
-
-  // HTML 엔티티 디코드
-  markdown = markdown.replace(/&nbsp;/g, " ");
-  markdown = markdown.replace(/&lt;/g, "<");
-  markdown = markdown.replace(/&gt;/g, ">");
-  markdown = markdown.replace(/&amp;/g, "&");
-  markdown = markdown.replace(/&quot;/g, '"');
-
-  // 연속된 빈 줄 정리
-  markdown = markdown.replace(/\n{3,}/g, "\n\n");
-
-  return markdown.trim();
-}
-
 // 마크다운을 HTML로 변환하는 간단한 함수
 function markdownToHtml(markdown) {
   let html = markdown;
@@ -140,6 +46,82 @@ function markdownToHtml(markdown) {
   return html;
 }
 
+// HTML을 순수 텍스트로 변환 (개행 유지, 태그 제거)
+function htmlToPlainText(html) {
+  let text = html;
+
+  // 줄바꿈 대응
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+
+  // 목록 항목은 접두사 추가 후 줄바꿈
+  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (m, c) => `- ${c}\n`);
+
+  // 블록 요소의 경계에 줄바꿈 부여
+  const blockTags = [
+    "p",
+    "div",
+    "section",
+    "article",
+    "header",
+    "footer",
+    "main",
+    "aside",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "pre",
+    "blockquote",
+    "ul",
+    "ol",
+    "table",
+    "tr",
+    "td",
+  ];
+  blockTags.forEach((tag) => {
+    const openRe = new RegExp(`<${tag}[^>]*>`, "gi");
+    const closeRe = new RegExp(`</${tag}>`, "gi");
+    text = text.replace(openRe, "");
+    // 닫는 태그 뒤에 줄바꿈
+    text = text.replace(closeRe, "\n");
+  });
+
+  // 링크: 앵커 텍스트만 남기고 URL은 괄호로 보조 표시
+  text = text.replace(
+    /<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi,
+    (m, href, label) => {
+      // 텍스트 중심. 필요 시 `${label} (${href})` 로 바꿀 수 있음
+      return label;
+    }
+  );
+
+  // 이미지: 대체 텍스트만 남김
+  text = text.replace(/<img[^>]*alt="([^"]*)"[^>]*>/gi, (m, alt) =>
+    alt ? `[${alt}]` : ""
+  );
+
+  // 잔여 모든 태그 제거
+  text = text.replace(/<[^>]+>/g, "");
+
+  // HTML 엔티티 디코딩
+  text = text
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  // 공백 정리: 줄 끝 공백 제거
+  text = text.replace(/[ \t]+$/gm, "");
+  // 3줄 이상 연속 개행을 2줄로 축약
+  text = text.replace(/\n{3,}/g, "\n\n");
+
+  return text.trim();
+}
+
 export const MarkdownClipboard = Extension.create({
   name: "markdownClipboard",
 
@@ -156,11 +138,23 @@ export const MarkdownClipboard = Extension.create({
 
               if (from === to) return false;
 
-              const html = this.editor.getHTML();
-              const markdown = htmlToMarkdown(html);
+              // 선택된 HTML만 추출
+              const getSelectionHtml = () => {
+                const sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) return this.editor.getHTML();
+                const container = document.createElement("div");
+                for (let i = 0; i < sel.rangeCount; i++) {
+                  const frag = sel.getRangeAt(i).cloneContents();
+                  container.appendChild(frag);
+                }
+                return container.innerHTML || this.editor.getHTML();
+              };
 
-              // 클립보드에 마크다운과 HTML 둘 다 복사
-              event.clipboardData.setData("text/plain", markdown);
+              const html = getSelectionHtml();
+              const plain = htmlToPlainText(html);
+
+              // 클립보드: text/plain 은 태그 제거 + 개행 유지, text/html 은 원본 유지
+              event.clipboardData.setData("text/plain", plain);
               event.clipboardData.setData("text/html", html);
               event.preventDefault();
 
@@ -172,10 +166,21 @@ export const MarkdownClipboard = Extension.create({
 
               if (from === to) return false;
 
-              const html = this.editor.getHTML();
-              const markdown = htmlToMarkdown(html);
+              const getSelectionHtml = () => {
+                const sel = window.getSelection();
+                if (!sel || sel.rangeCount === 0) return this.editor.getHTML();
+                const container = document.createElement("div");
+                for (let i = 0; i < sel.rangeCount; i++) {
+                  const frag = sel.getRangeAt(i).cloneContents();
+                  container.appendChild(frag);
+                }
+                return container.innerHTML || this.editor.getHTML();
+              };
 
-              event.clipboardData.setData("text/plain", markdown);
+              const html = getSelectionHtml();
+              const plain = htmlToPlainText(html);
+
+              event.clipboardData.setData("text/plain", plain);
               event.clipboardData.setData("text/html", html);
               event.preventDefault();
 

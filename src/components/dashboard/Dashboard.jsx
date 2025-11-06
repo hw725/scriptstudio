@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { format, isToday, isYesterday } from "date-fns";
-import ImportBackupButton from "./ImportBackupButton.jsx";
 
 const StatCard = ({
   title,
@@ -144,6 +143,10 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log("📊 대시보드 데이터 업데이트:", {
+      notes: notes.length,
+      projects: projects.length,
+    });
     const allItems = notes.map((note) => ({ ...note, type: "note" }));
 
     const sorted = allItems
@@ -151,7 +154,7 @@ export default function DashboardPage() {
       .slice(0, 5);
 
     setRecentItems(sorted);
-  }, [notes]);
+  }, [notes, projects]);
 
   const handleSelectProject = (project) => {
     // 실제 존재하는 프로젝트인지 확인
@@ -191,16 +194,6 @@ export default function DashboardPage() {
   };
 
   const handleGoToWorkspace = () => {
-    // 현재 프로젝트가 유효한지 체크
-    if (projects.length > 0 && !projects.some((p) => p.id === projects[0].id)) {
-      toast({
-        title: "프로젝트를 찾을 수 없음",
-        description:
-          "워크스페이스로 이동할 수 없습니다. 프로젝트가 존재하지 않습니다.",
-        variant: "destructive",
-      });
-      return;
-    }
     window.location.href = createPageUrl("Workspace");
   };
 
@@ -415,10 +408,6 @@ export default function DashboardPage() {
                       <FileSignature className="h-4 w-4 mr-3" />
                       템플릿 관리
                     </Button>
-                    <ImportBackupButton
-                      variant="ghost"
-                      className="w-full justify-start h-10"
-                    />
                   </div>
                 </CardContent>
               </Card>
