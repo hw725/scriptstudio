@@ -104,13 +104,100 @@ const mockAuth = {
   isAuthenticated: true,
 };
 
+// Project entity with CASCADE delete
+class ProjectEntity extends LocalEntity {
+  constructor() {
+    super("projects");
+  }
+
+  async delete(id) {
+    console.log(`🗑️ 로컬에서 프로젝트 CASCADE 삭제:`, id);
+
+    try {
+      // 1. 프로젝트에 속한 노트들 삭제 (CASCADE)
+      const notes = await localDB.getAllByIndex("notes", "project_id", id);
+      for (const note of notes) {
+        await localDB.delete("notes", note.id);
+      }
+
+      // 2. 프로젝트에 속한 폴더들 삭제 (CASCADE)
+      const folders = await localDB.getAllByIndex("folders", "project_id", id);
+      for (const folder of folders) {
+        await localDB.delete("folders", folder.id);
+      }
+
+      // 3. 프로젝트에 속한 참고문헌 삭제 (CASCADE)
+      const references = await localDB.getAllByIndex(
+        "references",
+        "project_id",
+        id
+      );
+      for (const ref of references) {
+        await localDB.delete("references", ref.id);
+      }
+
+      // 4. 프로젝트 설정 삭제 (CASCADE)
+      const allSettings = await localDB.getAll("project_settings");
+      const projectSettings = allSettings.filter((s) => s.project_id === id);
+      for (const setting of projectSettings) {
+        await localDB.delete("project_settings", setting.id);
+      }
+
+      // 5. 프로젝트 자체 삭제
+      await localDB.delete(this.storeName, id);
+
+      console.log(`✅ 프로젝트 ${id} 및 관련 데이터 모두 삭제 완료`);
+      return { success: true };
+    } catch (error) {
+      console.error("프로젝트 삭제 실패:", error);
+      throw error;
+    }
+  }
+}
+
+// Folder entity with CASCADE delete
+class FolderEntity extends LocalEntity {
+  constructor() {
+    super("folders");
+  }
+
+  async delete(id) {
+    console.log(`🗑️ 로컬에서 폴더 CASCADE 삭제:`, id);
+
+    try {
+      // 1. 하위 폴더들 찾아서 재귀적으로 삭제
+      const allFolders = await localDB.getAll("folders");
+      const childFolders = allFolders.filter((f) => f.parent_id === id);
+      for (const child of childFolders) {
+        await this.delete(child.id); // 재귀 호출
+      }
+
+      // 2. 이 폴더에 속한 노트들 삭제 (CASCADE)
+      const allNotes = await localDB.getAll("notes");
+      const folderNotes = allNotes.filter((n) => n.folder_id === id);
+      for (const note of folderNotes) {
+        await localDB.delete("notes", note.id);
+      }
+
+      // 3. 폴더 자체 삭제
+      await localDB.delete(this.storeName, id);
+
+      console.log(`✅ 폴더 ${id} 및 하위 항목 모두 삭제 완료`);
+      return { success: true };
+    } catch (error) {
+      console.error("폴더 삭제 실패:", error);
+      throw error;
+    }
+  }
+}
+
 // 로컬 전용 클라이언트
 export const localClient = {
   entities: {
     Note: new LocalEntity("notes"),
-    Folder: new LocalEntity("folders"),
+    Folder: new FolderEntity(), // CASCADE 삭제 지원
     Reference: new LocalEntity("references"),
-    Project: new LocalEntity("projects"),
+    Project: new ProjectEntity(), // CASCADE 삭제 지원
     Template: new LocalEntity("templates"),
     ProjectSettings: new LocalEntity("project_settings"),
     CitationStyle: new LocalEntity("citation_styles"),

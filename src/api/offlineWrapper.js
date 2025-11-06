@@ -165,8 +165,8 @@ class OfflineEntityWrapper {
         console.log(`[${this.storeName}] 서버에 delete 요청:`, id);
         await this.apiEntity.delete(id);
 
-        // 서버 삭제 성공 시 로컬에서도 삭제
-        await localDB.delete(this.storeName, id);
+        // 서버 삭제 성공 시 로컬 캐시에서도 CASCADE 삭제
+        await this.deleteLocalCascade(id);
 
         console.log(`[${this.storeName}] ✅ 서버 삭제 성공:`, id);
         return { success: true };
@@ -189,6 +189,79 @@ class OfflineEntityWrapper {
       await localDB.put(this.storeName, { id, sync_status: "pending_delete" });
       await this.addToSyncQueue("delete", { id });
       return { success: true };
+    }
+  }
+
+  async deleteLocalCascade(id) {
+    // 프로젝트 삭제 시 관련 데이터도 로컬 캐시에서 삭제
+    if (this.storeName === "projects") {
+      const folders = await localDB.getAll("folders");
+      const notes = await localDB.getAll("notes");
+      const references = await localDB.getAll("references");
+      const settings = await localDB.getAll("project_settings");
+
+      // 프로젝트 삭제
+      await localDB.delete(this.storeName, id);
+
+      // 관련 폴더 찾기 및 삭제
+      const projectFolders = folders.filter((f) => f.project_id === id);
+      for (const folder of projectFolders) {
+        await localDB.delete("folders", folder.id);
+
+        // 하위 폴더 재귀 삭제
+        await this.deleteChildFoldersFromCache(folder.id, folders);
+      }
+
+      // 프로젝트의 모든 노트 삭제
+      for (const note of notes) {
+        if (note.project_id === id) {
+          await localDB.delete("notes", note.id);
+        }
+      }
+
+      // 프로젝트의 모든 참고문헌 삭제
+      for (const ref of references) {
+        if (ref.project_id === id) {
+          await localDB.delete("references", ref.id);
+        }
+      }
+
+      // 프로젝트 설정 삭제
+      for (const setting of settings) {
+        if (setting.project_id === id) {
+          await localDB.delete("project_settings", setting.id);
+        }
+      }
+    }
+    // 폴더 삭제 시 하위 폴더와 노트도 로컬 캐시에서 삭제
+    else if (this.storeName === "folders") {
+      const folders = await localDB.getAll("folders");
+      const notes = await localDB.getAll("notes");
+
+      // 폴더 삭제
+      await localDB.delete(this.storeName, id);
+
+      // 하위 폴더 재귀 삭제
+      await this.deleteChildFoldersFromCache(id, folders);
+
+      // 폴더의 모든 노트 삭제
+      for (const note of notes) {
+        if (note.folder_id === id) {
+          await localDB.delete("notes", note.id);
+        }
+      }
+    }
+    // 기타 엔티티는 단순 삭제
+    else {
+      await localDB.delete(this.storeName, id);
+    }
+  }
+
+  async deleteChildFoldersFromCache(parentId, allFolders) {
+    const children = allFolders.filter((f) => f.parent_id === parentId);
+    for (const child of children) {
+      await localDB.delete("folders", child.id);
+      await this.deleteChildFoldersFromCache(child.id, allFolders);
     }
   }
 

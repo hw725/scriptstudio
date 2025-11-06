@@ -141,13 +141,14 @@ export default function ProjectSelector() {
         );
       }
 
-      await refetchData();
+      await refetchData(); // await로 완료 대기
       setShowDeleteDialog(false);
       setProjectToDelete(null);
       setDeleteConfirmName("");
       setDeleteAction("move");
     } catch (error) {
       console.error("Failed to delete project:", error);
+      await refetchData(); // 에러 시에도 새로고침
     }
   };
 
