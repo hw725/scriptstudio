@@ -4,6 +4,8 @@ class OfflineEntityWrapper {
   constructor(apiEntity, storeName) {
     this.apiEntity = apiEntity;
     this.storeName = storeName;
+    // 최근 삭제된 항목 ID를 임시 저장 (5초간 유지)
+    this.recentlyDeleted = new Map();
   }
 
   async list(sortBy = "-created_date") {
@@ -32,7 +34,12 @@ class OfflineEntityWrapper {
           }
         }
 
-        return Array.from(byId.values());
+        // 최근 삭제된 항목 필터링
+        const result = Array.from(byId.values()).filter(
+          (item) => !this.recentlyDeleted.has(item.id)
+        );
+
+        return result;
       } catch (error) {
         console.error(
           `[${this.storeName}] 온라인 list 실패, 로컬 데이터 사용:`,
@@ -159,6 +166,9 @@ class OfflineEntityWrapper {
   }
 
   async delete(id) {
+    // 삭제된 항목을 최근 삭제 목록에 추가 (5초간 유지)
+    this.markAsRecentlyDeleted(id);
+
     // 온라인이면 서버에서 바로 삭제 시도
     if (navigator.onLine) {
       try {
@@ -193,6 +203,8 @@ class OfflineEntityWrapper {
   }
 
   async deleteLocalCascade(id) {
+    const deletedIds = []; // CASCADE로 삭제되는 모든 ID 추적
+
     // 프로젝트 삭제 시 관련 데이터도 로컬 캐시에서 삭제
     if (this.storeName === "projects") {
       const folders = await localDB.getAll("folders");
@@ -207,15 +219,21 @@ class OfflineEntityWrapper {
       const projectFolders = folders.filter((f) => f.project_id === id);
       for (const folder of projectFolders) {
         await localDB.delete("folders", folder.id);
+        deletedIds.push(folder.id);
 
         // 하위 폴더 재귀 삭제
-        await this.deleteChildFoldersFromCache(folder.id, folders);
+        const childIds = await this.deleteChildFoldersFromCache(
+          folder.id,
+          folders
+        );
+        deletedIds.push(...childIds);
       }
 
       // 프로젝트의 모든 노트 삭제
       for (const note of notes) {
         if (note.project_id === id) {
           await localDB.delete("notes", note.id);
+          deletedIds.push(note.id);
         }
       }
 
@@ -223,6 +241,7 @@ class OfflineEntityWrapper {
       for (const ref of references) {
         if (ref.project_id === id) {
           await localDB.delete("references", ref.id);
+          deletedIds.push(ref.id);
         }
       }
 
@@ -230,11 +249,16 @@ class OfflineEntityWrapper {
       for (const setting of settings) {
         if (setting.project_id === id) {
           await localDB.delete("project_settings", setting.id);
+          deletedIds.push(setting.id);
         }
       }
+
+      // 삭제된 모든 항목을 최근 삭제 목록에 추가
+      this.markCascadeDeleted(deletedIds);
     }
     // 폴더 삭제 시 하위 폴더와 노트도 로컬 캐시에서 삭제
     else if (this.storeName === "folders") {
+      const deletedIds = [];
       const folders = await localDB.getAll("folders");
       const notes = await localDB.getAll("notes");
 
@@ -242,14 +266,19 @@ class OfflineEntityWrapper {
       await localDB.delete(this.storeName, id);
 
       // 하위 폴더 재귀 삭제
-      await this.deleteChildFoldersFromCache(id, folders);
+      const childIds = await this.deleteChildFoldersFromCache(id, folders);
+      deletedIds.push(...childIds);
 
       // 폴더의 모든 노트 삭제
       for (const note of notes) {
         if (note.folder_id === id) {
           await localDB.delete("notes", note.id);
+          deletedIds.push(note.id);
         }
       }
+
+      // 삭제된 모든 항목을 최근 삭제 목록에 추가
+      this.markCascadeDeleted(deletedIds);
     }
     // 기타 엔티티는 단순 삭제
     else {
@@ -258,15 +287,33 @@ class OfflineEntityWrapper {
   }
 
   async deleteChildFoldersFromCache(parentId, allFolders) {
+    const deletedIds = [];
     const children = allFolders.filter((f) => f.parent_id === parentId);
     for (const child of children) {
       await localDB.delete("folders", child.id);
-      await this.deleteChildFoldersFromCache(child.id, allFolders);
+      deletedIds.push(child.id);
+
+      const childChildIds = await this.deleteChildFoldersFromCache(
+        child.id,
+        allFolders
+      );
+      deletedIds.push(...childChildIds);
     }
+    return deletedIds;
   }
 
   async cacheSingle(data) {
     if (data?.id) {
+      // 로컬에 이미 pending_delete 상태인 항목은 캐싱하지 않음
+      const existing = await localDB.get(this.storeName, data.id);
+      if (existing?.sync_status === "pending_delete") {
+        console.log(
+          `[${this.storeName}] ⏭️ pending_delete 항목 캐싱 건너뜀:`,
+          data.id
+        );
+        return;
+      }
+
       await localDB.put(this.storeName, { ...data, sync_status: "synced" });
     }
   }
@@ -292,6 +339,22 @@ class OfflineEntityWrapper {
       data,
       timestamp: Date.now(),
     });
+  }
+
+  markAsRecentlyDeleted(id) {
+    this.recentlyDeleted.set(id, Date.now());
+
+    // 5초 후 자동 제거
+    setTimeout(() => {
+      this.recentlyDeleted.delete(id);
+      console.log(`[${this.storeName}] 🧹 최근 삭제 목록에서 제거:`, id);
+    }, 5000);
+  }
+
+  markCascadeDeleted(ids) {
+    for (const id of ids) {
+      this.markAsRecentlyDeleted(id);
+    }
   }
 }
 
