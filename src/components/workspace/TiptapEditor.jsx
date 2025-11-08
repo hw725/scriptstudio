@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
+import Typography from "@tiptap/extension-typography";
 import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableCell } from "@tiptap/extension-table-cell";
@@ -42,6 +43,7 @@ const TiptapEditor = forwardRef(
             levels: [1, 2, 3, 4, 5, 6],
           },
         }),
+        Typography, // Smart quotes 및 타이포그래피 자동 변환
         MarkdownClipboard, // 마크다운 복사/붙여넣기 지원
         Link.configure({
           openOnClick: false,
