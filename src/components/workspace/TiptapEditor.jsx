@@ -100,6 +100,16 @@ const TiptapEditor = forwardRef(
         attributes: {
           class:
             "prose prose-sm sm:prose lg:prose-lg xl:prose-xl focus:outline-none min-h-[300px] max-w-none",
+          spellcheck:
+            typeof _disabled !== "undefined" && _disabled ? "false" : "false",
+          autocorrect: "off",
+          autocapitalize: "off",
+          autocomplete: "off",
+          // Turn off common third-party grammar tools
+          "data-gramm": "false",
+          "data-gramm_editor": "false",
+          "data-enable-grammarly": "false",
+          "data-lt-active": "false",
         },
       },
       onUpdate: ({ editor }) => {

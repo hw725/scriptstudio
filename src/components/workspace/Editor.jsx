@@ -111,6 +111,8 @@ export default function Editor({
   isReadMode: externalReadMode,
   onEnterTranslationMode,
 }) {
+  // 맞춤법 검사 on/off 상태
+  const [spellcheckEnabled, setSpellcheckEnabled] = useState(false);
   const { allNotes, updateNoteInState, currentProject } = useData();
 
   const [title, setTitle] = useState("");
@@ -160,18 +162,8 @@ export default function Editor({
     }
   }, [externalReadMode, isReadMode]);
 
-  useEffect(() => {
-    if (editorRef.current && !isReadMode) {
-      const editor = editorRef.current.getEditor();
-      if (editor) {
-        const editorElement = editor.view.dom;
-        editorElement.setAttribute("spellcheck", "false");
-        editorElement.setAttribute("data-gramm", "false");
-        editorElement.setAttribute("data-gramm_editor", "false");
-        editorElement.setAttribute("data-enable-grammarly", "false");
-      }
-    }
-  }, [isReadMode]);
+  // spellcheck 속성은 TiptapEditor.jsx에서 직접 props로 제어합니다.
+  // 필요시 여기서도 동적으로 제어할 수 있습니다.
 
   const closeSuggestionPopover = useCallback(() => {
     setSuggestionState((prev) => ({ ...prev, isOpen: false }));
@@ -690,11 +682,24 @@ export default function Editor({
                 <DropdownMenuSeparator className="lg:hidden" />
               </div>
 
+              {/* 맞춤법 검사 on/off 토글 */}
+              <DropdownMenuItem
+                onClick={() => setSpellcheckEnabled((v) => !v)}
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="checkbox"
+                  readOnly
+                  checked={!!spellcheckEnabled}
+                  className="h-3.5 w-3.5 accent-blue-600"
+                />
+                <span>맞춤법 검사 {spellcheckEnabled ? "켜짐" : "꺼짐"}</span>
+              </DropdownMenuItem>
+
               <DropdownMenuItem onClick={handleToggleVersionHistory}>
                 <History className="h-4 w-4 mr-2" />
                 버전 히스토리
               </DropdownMenuItem>
-
               {/* 행 스타일 섹션 */}
               <DropdownMenuSeparator />
               <div className="px-2 pt-1 pb-0.5 text-[11px] font-semibold text-slate-500">
@@ -828,6 +833,7 @@ export default function Editor({
                   onChange={handleEditorChange}
                   placeholder="노트를 작성하세요..."
                   disabled={isReadMode}
+                  spellcheck={spellcheckEnabled}
                 />
               </Suspense>
             )}
