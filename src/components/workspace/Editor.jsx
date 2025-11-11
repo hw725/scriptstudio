@@ -544,7 +544,7 @@ export default function Editor({
         </Alert>
       )}
 
-      <div className="h-9 md:h-10 px-2.5 md:px-3 border-b border-slate-200 flex items-center justify-between gap-2.5 md:gap-3 flex-shrink-0 bg-white">
+      <div className="sticky top-0 z-10 h-9 md:h-10 px-2.5 md:px-3 border-b border-slate-200 flex items-center justify-between gap-2.5 md:gap-3 flex-shrink-0 bg-white">
         <input
           type="text"
           value={title}
