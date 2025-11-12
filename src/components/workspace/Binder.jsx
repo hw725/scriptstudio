@@ -69,14 +69,14 @@ const ResizableHandle = ({ onMouseDown }) => (
 );
 
 const SectionHeader = ({ title, icon, onAdd, onToggleViewMode, viewMode }) => (
-  <div className="h-12 px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-slate-50/80">
-    <div className="flex items-center gap-2">
+  <div className="h-11 sm:h-12 px-3 sm:px-4 py-3 flex items-center justify-between border-t border-slate-200 bg-slate-50/80">
+    <div className="flex items-center gap-1.5 sm:gap-2">
       {icon}
-      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+      <span className="text-[10px] sm:text-xs font-semibold text-slate-600 uppercase tracking-wide">
         {title}
       </span>
     </div>
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0.5 sm:gap-1">
       {onToggleViewMode && (
         <Button
           variant="ghost"
@@ -156,10 +156,10 @@ const TreeItem = ({
     <div>
       <div
         onClick={handleSelect}
-        className={`group flex items-center px-2 py-2 rounded-md cursor-pointer transition-all duration-150 ${
+        className={`group flex items-center px-2 py-2.5 sm:py-2 rounded-md cursor-pointer transition-all duration-150 active:scale-[0.98] ${
           isSelected
             ? "bg-primary/10 text-primary border-l-2 border-primary"
-            : "hover:bg-slate-100/70"
+            : "hover:bg-slate-100/70 active:bg-slate-200/70"
         } ${isDragging ? "opacity-50" : ""}`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
@@ -169,12 +169,12 @@ const TreeItem = ({
               variant="ghost"
               size="sm"
               onClick={handleToggle}
-              className="h-5 w-5 p-0 hover:bg-slate-200/60"
+              className="h-6 w-6 sm:h-5 sm:w-5 p-0 hover:bg-slate-200/60 flex-shrink-0"
             >
               {isExpanded ? (
-                <ChevronDown className="h-3 w-3 text-slate-500" />
+                <ChevronDown className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-slate-500" />
               ) : (
-                <ChevronRight className="h-3 w-3 text-slate-500" />
+                <ChevronRight className="h-3.5 w-3.5 sm:h-3 sm:w-3 text-slate-500" />
               )}
             </Button>
           )}
@@ -195,10 +195,10 @@ const TreeItem = ({
                 onChange={(e) => setRenameValue(e.target.value)}
                 onKeyDown={handleRenameKeyDown}
                 onBlur={() => onCommitRename(item.id, renameValue)}
-                className="h-6 text-sm py-1 px-2"
+                className="h-7 sm:h-6 text-sm py-1 px-2"
               />
             ) : (
-              <span className="text-sm font-medium text-slate-800 truncate block">
+              <span className="text-sm font-medium text-slate-800 truncate block leading-snug">
                 {item.name || item.title}
               </span>
             )}
@@ -208,7 +208,7 @@ const TreeItem = ({
                 {!currentProject && item.project_id && (
                   <Badge
                     variant="outline"
-                    className="text-xs py-0 h-4 bg-blue-50 text-blue-700 border-blue-200"
+                    className="text-[10px] sm:text-xs py-0 h-4 bg-blue-50 text-blue-700 border-blue-200"
                   >
                     {projects.find((p) => p.id === item.project_id)?.title ||
                       "Unknown"}
@@ -217,7 +217,7 @@ const TreeItem = ({
                 {item.translation_of_id && (
                   <Badge
                     variant="outline"
-                    className="text-xs py-0 h-4 bg-purple-50 text-purple-700 border-purple-200"
+                    className="text-[10px] sm:text-xs py-0 h-4 bg-purple-50 text-purple-700 border-purple-200"
                   >
                     <Languages className="h-2.5 w-2.5 mr-0.5" />
                     연결됨
@@ -225,7 +225,7 @@ const TreeItem = ({
                 )}
                 {item.status && item.status !== "not_started" && (
                   <Badge
-                    className={`text-xs py-0 h-4 ${
+                    className={`text-[10px] sm:text-xs py-0 h-4 ${
                       StatusColors[item.status] || StatusColors["not_started"]
                     }`}
                   >
@@ -234,7 +234,7 @@ const TreeItem = ({
                 )}
                 {item.label && item.label !== "none" && (
                   <Badge
-                    className={`text-xs py-0 h-4 ${
+                    className={`text-[10px] sm:text-xs py-0 h-4 ${
                       LabelColors[item.label] || ""
                     }`}
                   >
@@ -246,7 +246,7 @@ const TreeItem = ({
                     <Badge
                       key={tag}
                       variant="secondary"
-                      className="text-xs py-0 h-4 bg-purple-50 text-purple-700 border-purple-200"
+                      className="text-[10px] sm:text-xs py-0 h-4 bg-purple-50 text-purple-700 border-purple-200"
                     >
                       #{tag}
                     </Badge>
@@ -657,18 +657,20 @@ export default function Binder({
     <DragDropContext onDragEnd={handleDragEnd}>
       <div
         className="relative flex flex-col h-full bg-white border-r border-slate-200"
-        style={{ width: `${width}px` }}
+        style={{ width: `${width}px`, minWidth: "240px" }}
       >
         <ResizableHandle onMouseDown={handleMouseDown} />
 
-        <div className="h-12 px-4 py-3 border-b border-slate-200 bg-white flex items-center justify-between min-w-0">
-          <span className="font-semibold text-slate-800 truncate">바인더</span>
-          <div className="flex items-center gap-1">
+        <div className="h-11 sm:h-12 px-3 sm:px-4 py-3 border-b border-slate-200 bg-white flex items-center justify-between min-w-0">
+          <span className="text-sm sm:text-base font-semibold text-slate-800 truncate">
+            바인더
+          </span>
+          <div className="flex items-center gap-0.5 sm:gap-1">
             <Button
               onClick={() => setShowExportModal(true)}
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0"
+              className="h-8 w-8 sm:h-7 sm:w-7 p-0"
               title="프로젝트 내보내기"
             >
               <Download className="h-4 w-4" />
@@ -677,7 +679,7 @@ export default function Binder({
               variant="ghost"
               size="sm"
               onClick={() => setCollapsed(true)}
-              className="h-7 w-7 p-0 flex-shrink-0"
+              className="h-8 w-8 sm:h-7 sm:w-7 p-0 flex-shrink-0"
             >
               <PanelLeftClose className="h-4 w-4" />
             </Button>

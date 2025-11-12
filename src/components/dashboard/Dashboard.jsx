@@ -123,30 +123,34 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="h-screen overflow-auto bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="h-screen overflow-auto bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 p-4 sm:p-6 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-2">대시보드</h1>
-            <p className="text-slate-600">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-1 sm:mb-2">
+              대시보드
+            </h1>
+            <p className="text-sm sm:text-base text-slate-600">
               프로젝트와 노트를 한눈에 확인하세요
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Button
               onClick={handleNewNote}
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700"
+              size="default"
+              className="bg-blue-600 hover:bg-blue-700 flex-1 sm:flex-none"
             >
-              <Plus className="h-5 w-5 mr-2" />새 노트
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+              <span className="text-sm sm:text-base">새 노트</span>
             </Button>
             <Button
               onClick={handleGoToWorkspace}
-              size="lg"
+              size="default"
               variant="outline"
+              className="flex-1 sm:flex-none"
             >
-              <ArrowRight className="h-5 w-5 mr-2" />
-              작업 공간
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+              <span className="text-sm sm:text-base">작업 공간</span>
             </Button>
           </div>
         </div>
@@ -200,14 +204,16 @@ export default function Dashboard() {
 
         <Card className="border-slate-200 shadow-sm">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-slate-600" />
-                <CardTitle className="text-lg">최근 작업한 노트</CardTitle>
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
+                <CardTitle className="text-base sm:text-lg">
+                  최근 작업한 노트
+                </CardTitle>
               </div>
               <Badge
                 variant="secondary"
-                className="bg-blue-100 text-blue-700"
+                className="bg-blue-100 text-blue-700 text-xs w-fit"
               >
                 최근 7일
               </Badge>
@@ -215,35 +221,36 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {stats.recentNotes.length === 0 ? (
-              <div className="text-center py-12">
-                <Sparkles className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500 mb-4">
+              <div className="text-center py-8 sm:py-12">
+                <Sparkles className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 mx-auto mb-3 sm:mb-4" />
+                <p className="text-sm sm:text-base text-slate-500 mb-3 sm:mb-4">
                   최근 작업한 노트가 없습니다
                 </p>
                 <Button
                   onClick={handleNewNote}
                   variant="outline"
+                  size="sm"
                 >
                   <Plus className="h-4 w-4 mr-2" />첫 노트 작성하기
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {stats.recentNotes.map((note) => (
                   <div
                     key={note.id}
                     onClick={() => handleNoteClick(note)}
-                    className="flex items-center justify-between p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer group"
+                    className="flex items-center justify-between p-3 sm:p-4 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all cursor-pointer group active:scale-[0.98]"
                   >
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-white" />
+                    <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                      <div className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                        <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-slate-900 truncate group-hover:text-blue-700 transition-colors">
+                        <h3 className="text-sm sm:text-base font-medium text-slate-900 truncate group-hover:text-blue-700 transition-colors">
                           {note.title || "제목 없음"}
                         </h3>
-                        <div className="flex items-center gap-3 mt-1">
+                        <div className="flex items-center gap-2 sm:gap-3 mt-0.5 sm:mt-1">
                           <span className="text-xs text-slate-500">
                             <Clock className="h-3 w-3 inline mr-1" />
                             {getRelativeTime(
@@ -253,7 +260,7 @@ export default function Dashboard() {
                           {note.status && (
                             <Badge
                               variant="outline"
-                              className="text-xs h-5 px-2"
+                              className="text-xs h-5 px-2 hidden sm:inline-flex"
                             >
                               {note.status}
                             </Badge>
@@ -270,33 +277,33 @@ export default function Dashboard() {
         </Card>
 
         <Card className="border-slate-200 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-1">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-1">
                   빠른 시작
                 </h3>
-                <p className="text-sm text-slate-600">
+                <p className="text-xs sm:text-sm text-slate-600">
                   새로운 노트를 작성하거나 작업 공간으로 이동하세요
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3">
                 <Button
                   onClick={handleNewNote}
-                  size="lg"
-                  className="bg-blue-600 hover:bg-blue-700 shadow-md"
+                  size="default"
+                  className="bg-blue-600 hover:bg-blue-700 shadow-md flex-1 sm:flex-none"
                 >
-                  <Plus className="h-5 w-5 mr-2" />
-                  노트 작성
+                  <Plus className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
+                  <span className="text-sm sm:text-base">노트 작성</span>
                 </Button>
                 <Button
                   onClick={handleGoToWorkspace}
-                  size="lg"
+                  size="default"
                   variant="outline"
-                  className="shadow-sm"
+                  className="shadow-sm flex-1 sm:flex-none"
                 >
-                  작업 공간 열기
-                  <ArrowRight className="h-5 w-5 ml-2" />
+                  <span className="text-sm sm:text-base">작업 공간</span>
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-1 sm:ml-2" />
                 </Button>
               </div>
             </div>

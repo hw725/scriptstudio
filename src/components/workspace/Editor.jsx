@@ -544,18 +544,18 @@ export default function Editor({
         </Alert>
       )}
 
-      <div className="sticky top-0 z-10 h-9 md:h-10 px-2.5 md:px-3 border-b border-slate-200 flex items-center justify-between gap-2.5 md:gap-3 flex-shrink-0 bg-white">
+      <div className="sticky top-0 z-10 h-11 sm:h-12 md:h-10 px-2 sm:px-2.5 md:px-3 border-b border-slate-200 flex items-center justify-between gap-1.5 sm:gap-2.5 md:gap-3 flex-shrink-0 bg-white">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="문서 제목"
-          className="text-lg font-semibold tracking-tight flex-1 focus:outline-none bg-transparent text-slate-800 min-w-0"
+          className="text-base sm:text-lg font-semibold tracking-tight flex-1 focus:outline-none bg-transparent text-slate-800 min-w-0"
           disabled={isReadMode}
         />
 
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="text-sm whitespace-nowrap hidden md:block">
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-shrink-0">
+          <div className="text-xs sm:text-sm whitespace-nowrap hidden md:block">
             {isSaving ? (
               <span className="text-blue-600 font-medium">저장중...</span>
             ) : hasUnsavedChanges ? (
@@ -570,10 +570,10 @@ export default function Editor({
             disabled={isSaving || !hasUnsavedChanges || isReadMode}
             variant={hasUnsavedChanges ? "default" : "outline"}
             size="sm"
-            className="gap-1 h-7 md:h-8 text-xs"
+            className="gap-0.5 sm:gap-1 h-8 sm:h-7 md:h-8 text-xs px-2 sm:px-3"
           >
-            <Save className="h-3 w-3" />
-            <span className="hidden sm:inline">
+            <Save className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span className="hidden sm:inline ml-1">
               {isSaving ? "저장중" : "저장"}
             </span>
           </Button>
@@ -584,7 +584,7 @@ export default function Editor({
                 onClick={() => setIsReadMode(!isReadMode)}
                 variant={isReadMode ? "default" : "outline"}
                 size="sm"
-                className="gap-1 h-7 md:h-8 text-xs"
+                className="gap-1 h-7 md:h-8 text-xs px-2 md:px-3"
               >
                 {isReadMode ? "편집" : "읽기"}
               </Button>
@@ -595,7 +595,7 @@ export default function Editor({
                 onClick={() => setUseSerifFont(!useSerifFont)}
                 variant={useSerifFont ? "default" : "outline"}
                 size="sm"
-                className="gap-1 h-7 md:h-8 text-xs"
+                className="gap-1 h-7 md:h-8 text-xs px-2 md:px-3"
                 title="폰트 변경"
               >
                 {useSerifFont ? "명조" : "고딕"}
@@ -607,10 +607,10 @@ export default function Editor({
                 onClick={() => onEnterTranslationMode(note.id)}
                 variant="outline"
                 size="sm"
-                className="gap-1 h-7 md:h-8 text-xs"
+                className="gap-1 h-7 md:h-8 text-xs px-2 md:px-3"
               >
                 <Languages className="h-3 w-3" />
-                번역
+                <span className="hidden xl:inline">번역</span>
               </Button>
             )}
           </div>
@@ -621,7 +621,7 @@ export default function Editor({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 md:h-8 px-2 gap-1"
+                className="h-8 sm:h-7 md:h-8 px-2 gap-0.5 sm:gap-1"
                 title="태그 편집"
               >
                 <Tags className="h-3.5 w-3.5" />
@@ -630,7 +630,7 @@ export default function Editor({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-80 p-2"
+              className="w-72 sm:w-80 p-2"
             >
               <div className="p-1">
                 <TagInput
@@ -647,7 +647,7 @@ export default function Editor({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 md:h-8 w-7 md:w-8 p-0"
+                className="h-8 w-8 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>

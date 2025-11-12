@@ -205,14 +205,14 @@ export default function WorkspacePage() {
   return (
     <div className="flex flex-col h-full w-full bg-slate-50">
       {/* 동기화 상태 표시 (상단에 고정) */}
-      <div className="h-12 px-4 py-2 border-b border-slate-200 bg-white flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="h-11 sm:h-12 px-2 sm:px-4 py-2 border-b border-slate-200 bg-white flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
           <Link to={createPageUrl("Dashboard")}>
             <Button
               variant="ghost"
               size="icon"
               title="대시보드로 이동"
-              className="h-6 w-6"
+              className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0"
             >
               <LayoutDashboard className="h-4 w-4 text-primary/80" />
             </Button>
@@ -223,7 +223,9 @@ export default function WorkspacePage() {
             </div>
           )}
         </div>
-        <SyncStatusBadge />
+        <div className="flex-shrink-0">
+          <SyncStatusBadge />
+        </div>
       </div>
 
       <div className="flex flex-1 min-h-0">
