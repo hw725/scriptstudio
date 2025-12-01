@@ -12,10 +12,35 @@ import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
+import { marked } from "marked";
 import "@/components/workspace/TiptapEditor.css";
 
 // lowlight 인스턴스 생성
 const lowlight = createLowlight(common);
+
+// marked 설정 - GFM(GitHub Flavored Markdown) 활성화
+marked.setOptions({
+  gfm: true,
+  breaks: true, // 줄바꿈을 <br>로 변환
+});
+
+// 콘텐츠가 HTML인지 Markdown인지 감지
+function isHtml(content) {
+  if (!content || typeof content !== "string") return false;
+  // HTML 태그가 포함되어 있으면 HTML로 간주
+  const htmlTagPattern = /<\/?[a-z][\s\S]*>/i;
+  return htmlTagPattern.test(content);
+}
+
+// Markdown을 HTML로 변환 (이미 HTML이면 그대로 반환)
+function parseContent(content) {
+  if (!content) return "";
+  if (isHtml(content)) {
+    return content;
+  }
+  // Markdown을 HTML로 변환
+  return marked.parse(content);
+}
 
 // Base44와 통신할 허용된 origin들
 const ALLOWED_ORIGINS = [
@@ -144,19 +169,23 @@ export default function EmbedEditor() {
       if (!editor) return;
 
       switch (type) {
-        case "SET_CONTENT":
-          // 전체 콘텐츠 설정
-          editor.commands.setContent(content || "");
+        case "SET_CONTENT": {
+          // Markdown 또는 HTML 콘텐츠를 파싱하여 설정
+          const parsedContent = parseContent(content);
+          editor.commands.setContent(parsedContent || "");
           break;
+        }
 
-        case "INSERT_CONTENT":
-          // 현재 커서 위치에 콘텐츠 삽입
+        case "INSERT_CONTENT": {
+          // 현재 커서 위치에 콘텐츠 삽입 (Markdown 지원)
+          const parsedInsertContent = parseContent(content);
           editor
             .chain()
             .focus()
-            .insertContent(content || "")
+            .insertContent(parsedInsertContent || "")
             .run();
           break;
+        }
 
         case "GET_CONTENT":
           // 현재 콘텐츠 요청에 대한 응답
