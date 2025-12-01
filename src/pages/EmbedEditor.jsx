@@ -13,6 +13,14 @@ import TaskItem from "@tiptap/extension-task-item";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
 import { marked } from "marked";
+// 원래 TiptapEditor와 동일한 확장 기능
+import {
+  FootnoteReference,
+  FootnoteDefinition,
+  FootnotesSection,
+  footnoteHelpers,
+} from "@/components/workspace/FootnoteExtension";
+import { MarkdownClipboard } from "@/components/workspace/MarkdownClipboard";
 import "@/components/workspace/TiptapEditor.css";
 
 // lowlight 인스턴스 생성
@@ -69,6 +77,7 @@ export default function EmbedEditor() {
         },
       }),
       Typography,
+      MarkdownClipboard, // 마크다운 복사/붙여넣기 지원
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -115,6 +124,10 @@ export default function EmbedEditor() {
             "bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-sm overflow-x-auto",
         },
       }),
+      // 각주 확장 (원래 TiptapEditor와 동일)
+      FootnoteReference,
+      FootnoteDefinition,
+      FootnotesSection,
     ],
     content: "",
     editorProps: {
@@ -454,6 +467,17 @@ export default function EmbedEditor() {
             </button>
           </>
         )}
+
+        {/* 각주: 참조 + 정의(섹션) 자동 추가 */}
+        <button
+          onClick={() => {
+            footnoteHelpers.addFootnote(editor);
+          }}
+          className={`w-7 h-7 text-xs rounded bg-white hover:bg-gray-100`}
+          title="Insert Footnote (GFM)"
+        >
+          [^]
+        </button>
 
         {/* Undo/Redo */}
         <button
